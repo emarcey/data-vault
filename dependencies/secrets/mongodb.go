@@ -2,16 +2,21 @@ package secrets
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	mongoOptions "go.mongodb.org/mongo-driver/mongo/options"
+	mongoWriteConcern "go.mongodb.org/mongo-driver/mongo/writeconcern"
+
+	"emarcey/data-vault/common"
 )
 
 type MongoSecretsOpts struct {
-	DbUri          string
 	DbUsername     string
 	DbPassword     string
+	ClusterName    string
 	DatabaseName   string
 	CollectionName string
 }
@@ -23,20 +28,41 @@ type MongoSecretsManager struct {
 	collectionName string
 }
 
-func mongoConnect(ctx context.Context, client *mongo.Client, databaseName string, collectionName string) (*mongo.Collection, error) {
-	err := client.Connect(ctx)
+func (s *MongoSecretsManager) reconnect(ctx context.Context) error {
+	err := s.client.Connect(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return client.Database(databaseName).Collection(collectionName), nil
-}
-
-func (s *MongoSecretsManager) PutSecret(ctx context.Context, key string, value interface{}) error {
+	s.collection = s.client.Database(s.databaseName).Collection(s.collectionName)
 	return nil
 }
 
-func (s *MongoSecretsManager) GetSecret(ctx context.Context, key string) (interface{}, error) {
-	return nil, nil
+func (s *MongoSecretsManager) GetOrPutSecret(ctx context.Context, secret *Secret) (*Secret, error) {
+	result := s.collection.FindOne(ctx, bson.M{"_id": secret.Id})
+	if result == nil {
+		return nil, common.NewMongoGetOrPutSecretError("FindOne for secret %s returned nil.", secret.Id)
+	}
+	err := result.Err()
+	if err != nil {
+		if err.Error() != mongo.ErrNoDocuments.Error() {
+			return nil, common.NewMongoGetOrPutSecretError("FindOne for secret %s returned error: %v.", secret.Id, err)
+		}
+		result, err := s.collection.InsertOne(ctx, secret)
+		if err != nil {
+			return nil, common.NewMongoGetOrPutSecretError("Error inserting secret, %s, received error, %v", secret.Id, err)
+		}
+		if result == nil {
+			return nil, common.NewMongoGetOrPutSecretError("Nil result inserting secret, %s", secret.Id)
+		}
+		return secret, nil
+	}
+
+	var val Secret
+	err = result.Decode(&val)
+	if err != nil {
+		return nil, common.NewMongoGetOrPutSecretError("Decode for secret %s, with raw value %v, returned error: %v.", secret.Id, result, err)
+	}
+	return &val, nil
 }
 
 func (s *MongoSecretsManager) Close(ctx context.Context) {
@@ -45,27 +71,27 @@ func (s *MongoSecretsManager) Close(ctx context.Context) {
 
 func NewMongoSecretsManager(ctx context.Context, opts MongoSecretsOpts) (SecretsManager, error) {
 	var t time.Duration
+	retryWrites := true
 	client, err := mongo.NewClient(
-		mongoOptions.Client().ApplyURI(opts.DbUri),
+		mongoOptions.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@%s/%s", opts.DbUsername, opts.DbPassword, opts.ClusterName, opts.DatabaseName)),
 		&mongoOptions.ClientOptions{
 			MaxConnIdleTime: &t,
-			Auth: &mongoOptions.Credential{
-				Username: opts.DbUsername,
-				Password: opts.DbPassword,
-			},
+			RetryWrites:     &retryWrites,
+			WriteConcern:    mongoWriteConcern.New(mongoWriteConcern.WMajority()),
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	collection, err := mongoConnect(ctx, client, opts.DatabaseName, opts.CollectionName)
+	secretsManager := &MongoSecretsManager{
+		client:         client,
+		collection:     nil,
+		databaseName:   opts.DatabaseName,
+		collectionName: opts.CollectionName,
+	}
+	err = secretsManager.reconnect(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &MongoSecretsManager{
-		client:         client,
-		collection:     collection,
-		databaseName:   opts.DatabaseName,
-		collectionName: opts.CollectionName,
-	}, nil
+	return secretsManager, nil
 }

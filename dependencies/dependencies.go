@@ -13,7 +13,7 @@ import (
 
 type DependenciesInitOpts struct {
 	LoggerType         string
-	SecretsManagerOpts secrets.NewSecretsManagerOpts
+	SecretsManagerOpts secrets.SecretsManagerOpts
 	Env                string
 }
 type Dependencies struct {
