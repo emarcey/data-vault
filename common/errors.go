@@ -5,16 +5,18 @@ import (
 )
 
 type InitializationError struct {
-	dependency string
-	message    string
+	dependency  string
+	message     string
+	messageArgs []interface{}
 }
 
 func (e InitializationError) Error() string {
-	return fmt.Sprintf("Error during server startup module, %s, with message: "+e.message, e.dependency)
+	return fmt.Sprintf("Error during server startup module, %s, with message: ", e.dependency) +
+		fmt.Sprintf(e.message, e.messageArgs...)
 }
 
-func NewInitializationError(dependency, message string) InitializationError {
-	return InitializationError{dependency: dependency, message: message}
+func NewInitializationError(dependency, message string, messageArgs ...interface{}) InitializationError {
+	return InitializationError{dependency: dependency, message: message, messageArgs: messageArgs}
 }
 
 type SecretsError struct {

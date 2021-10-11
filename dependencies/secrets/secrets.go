@@ -48,6 +48,6 @@ func NewSecretsManager(ctx context.Context, opts SecretsManagerOpts) (SecretsMan
 	case "mongodb":
 		return NewMongoSecretsManager(ctx, opts.MongoOpts)
 	default:
-		return nil, common.NewInitializationError("secrets manager", fmt.Sprintf("Unknown secrets manager type %s", opts.ManagerType))
+		return nil, common.NewInitializationError("secrets manager", "Unknown secrets manager type %s", opts.ManagerType)
 	}
 }

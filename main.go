@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"emarcey/data-vault/db"
 	"emarcey/data-vault/dependencies"
 	"emarcey/data-vault/dependencies/secrets"
 )
@@ -26,7 +27,15 @@ func main() {
 				DatabaseName:   "dataVaultDb",
 				CollectionName: "secrets",
 			},
-		}}
+		},
+		DatabaseOpts: db.DatabaseOpts{
+			Driver:          "postgres",
+			Username:        "postgres",
+			Password:        "password",
+			Host:            "localhost",
+			DefaultDatabase: "nivelo",
+		},
+	}
 	deps, err := dependencies.MakeDependencies(ctx, opts)
 	if err != nil {
 		fmt.Print(err)
