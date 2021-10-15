@@ -1,6 +1,7 @@
 ---
-loggerType:
-env:
+httpAddr: http://localhost:9090
+loggerType: json
+env: local
 secretsManagerOpts:
   managerType:
   mongoOpts:

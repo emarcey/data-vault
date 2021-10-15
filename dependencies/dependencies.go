@@ -16,6 +16,7 @@ import (
 )
 
 type DependenciesInitOpts struct {
+	HttpAddr           string                     `yaml:"httpAddr`
 	LoggerType         string                     `yaml:"loggerType"`
 	SecretsManagerOpts secrets.SecretsManagerOpts `yaml:"secretsManagerOpts"`
 	DatabaseOpts       db.DatabaseOpts            `yaml:"databaseOpts"`
@@ -31,10 +32,13 @@ type Dependencies struct {
 func ReadOpts(filename string) (DependenciesInitOpts, error) {
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return DependenciesInitOpts{}, common.NewInitializationError("read-options", "Unable to read server options for file, %s, with error: %v", filename, err)
+		return DependenciesInitOpts{}, common.NewInitializationError("dependency-options", "Unable to read server options for file, %s, with error: %v", filename, err)
 	}
 	var opts DependenciesInitOpts
 	err = yaml.Unmarshal(raw, &opts)
+	if err != nil {
+		return DependenciesInitOpts{}, common.NewInitializationError("dependency-options", "Unable to unmarshal file, %s, with error: %v", filename, err)
+	}
 	return opts, nil
 }
 
