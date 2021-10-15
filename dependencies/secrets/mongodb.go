@@ -14,11 +14,11 @@ import (
 )
 
 type MongoSecretsOpts struct {
-	DbUsername     string
-	DbPassword     string
-	ClusterName    string
-	DatabaseName   string
-	CollectionName string
+	DbUsername     string `yaml:"dbUsername"`
+	DbPassword     string `yaml:"dbPassword"`
+	ClusterName    string `yaml:"clusterName"`
+	DatabaseName   string `yaml:"databaseName"`
+	CollectionName string `yaml:"collectionName"`
 }
 
 type MongoSecretsManager struct {

@@ -1,0 +1,17 @@
+---
+loggerType:
+env:
+secretsManagerOpts:
+  managerType:
+  mongoOpts:
+    dbUsername:
+    dbPassword:
+    clusterName:
+    databaseName:
+    collectionName:
+databaseOpts:
+  driver:
+  username:
+  password:
+  host:
+  defaultDatabase:

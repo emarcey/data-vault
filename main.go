@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"emarcey/data-vault/db"
 	"emarcey/data-vault/dependencies"
 	"emarcey/data-vault/dependencies/secrets"
 )
@@ -15,27 +14,12 @@ func main() {
 	fmt.Printf("Hello\n")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	opts := dependencies.DependenciesInitOpts{
-		LoggerType: "text",
-		Env:        "local",
-		SecretsManagerOpts: secrets.SecretsManagerOpts{
-			ManagerType: "mongodb",
-			MongoOpts: secrets.MongoSecretsOpts{
-				DbUsername:     "vaultUser",
-				DbPassword:     "rhthShra3QXnAhNu",
-				ClusterName:    "datavault.s63eg.mongodb.net",
-				DatabaseName:   "dataVaultDb",
-				CollectionName: "secrets",
-			},
-		},
-		DatabaseOpts: db.DatabaseOpts{
-			Driver:          "postgres",
-			Username:        "postgres",
-			Password:        "password",
-			Host:            "localhost",
-			DefaultDatabase: "nivelo",
-		},
+	opts, err := dependencies.ReadOpts("./server_conf.yml")
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
 	}
+
 	deps, err := dependencies.MakeDependencies(ctx, opts)
 	if err != nil {
 		fmt.Print(err)

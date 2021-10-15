@@ -39,8 +39,8 @@ type SecretsManager interface {
 }
 
 type SecretsManagerOpts struct {
-	ManagerType string
-	MongoOpts   MongoSecretsOpts
+	ManagerType string           `yaml:"managerType"`
+	MongoOpts   MongoSecretsOpts `yaml:"mongoOpts"`
 }
 
 func NewSecretsManager(ctx context.Context, opts SecretsManagerOpts) (SecretsManager, error) {

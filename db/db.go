@@ -13,11 +13,11 @@ import (
 )
 
 type DatabaseOpts struct {
-	Driver          string
-	Username        string
-	Password        string
-	Host            string
-	DefaultDatabase string
+	Driver          string `yaml:"driver"`
+	Username        string `yaml:"username"`
+	Password        string `yaml:"password"`
+	Host            string `yaml:"host"`
+	DefaultDatabase string `yaml:"defaultDatabase"`
 }
 
 type Database struct {
