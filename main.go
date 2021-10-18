@@ -12,7 +12,7 @@ import (
 
 func main() {
 	fmt.Printf("Hello\n")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	opts, err := dependencies.ReadOpts("./server_conf.yml")
 	if err != nil {
@@ -47,4 +47,6 @@ func main() {
 	}
 	fmt.Printf("Secret: %v\n", oSecret)
 	fmt.Printf("Secret2: %v\n", oSecret2)
+
+	time.Sleep(8 * time.Second)
 }

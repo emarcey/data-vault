@@ -2,6 +2,7 @@
 httpAddr: http://localhost:9090
 loggerType: json
 env: local
+dataRefreshSeconds: 5
 secretsManagerOpts:
   managerType:
   mongoOpts:

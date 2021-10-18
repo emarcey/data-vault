@@ -4,6 +4,11 @@ import (
 	"fmt"
 )
 
+type ErrorWithCode interface {
+	Error() string
+	Code() int
+}
+
 type InitializationError struct {
 	dependency  string
 	message     string
@@ -30,10 +35,66 @@ func (e SecretsError) Error() string {
 	return fmt.Sprintf("Error in %s %s: ", e.secretsManagerType, e.method) + fmt.Sprintf(e.message, e.messageArgs...)
 }
 
+func (e SecretsError) Code() int {
+	return 500
+}
+
 func NewMongoError(method, message string) SecretsError {
 	return SecretsError{secretsManagerType: "mongodb", method: method, message: message}
 }
 
 func NewMongoGetOrPutSecretError(message string, messageArgs ...interface{}) SecretsError {
 	return SecretsError{secretsManagerType: "mongodb", method: "GetOrPutSecret", message: message, messageArgs: messageArgs}
+}
+
+type DatabaseError struct {
+	operation   string
+	message     string
+	messageArgs []interface{}
+}
+
+func (e DatabaseError) Error() string {
+	return fmt.Sprintf("Error during database operation, %s, with message: ", e.operation) +
+		fmt.Sprintf(e.message, e.messageArgs...)
+}
+
+func (e DatabaseError) Code() int {
+	return 500
+}
+
+func NewDatabaseError(operation, message string, messageArgs ...interface{}) DatabaseError {
+	return DatabaseError{operation: operation, message: message, messageArgs: messageArgs}
+}
+
+type AuthorizationError struct {
+}
+
+func (e AuthorizationError) Error() string {
+	return fmt.Sprintf("Authorization Not Valid.")
+}
+
+func (e AuthorizationError) Code() int {
+	return 401
+}
+
+func NewAuthorizationError() AuthorizationError {
+	return AuthorizationError{}
+}
+
+type InvalidParamsError struct {
+	functionName string
+	message      string
+	messageArgs  []interface{}
+}
+
+func (e InvalidParamsError) Error() string {
+	return fmt.Sprintf("Error invalid params at %s: ", e.functionName) + fmt.Sprintf(e.message, e.messageArgs...)
+}
+
+func (e InvalidParamsError) Code() int {
+	return 400
+}
+
+func NewInvalidParamsError(functionName string, message string, messageArgs ...interface{}) InvalidParamsError {
+	return InvalidParamsError{functionName: functionName, message: message, messageArgs: messageArgs}
 }

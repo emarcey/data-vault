@@ -2,7 +2,9 @@ package dependencies
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
+	"time"
 
 	sentry "github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
@@ -11,7 +13,7 @@ import (
 	"emarcey/data-vault/common"
 	"emarcey/data-vault/common/logger"
 	"emarcey/data-vault/common/tracer"
-	"emarcey/data-vault/db"
+	"emarcey/data-vault/database"
 	"emarcey/data-vault/dependencies/secrets"
 )
 
@@ -19,14 +21,17 @@ type DependenciesInitOpts struct {
 	HttpAddr           string                     `yaml:"httpAddr`
 	LoggerType         string                     `yaml:"loggerType"`
 	SecretsManagerOpts secrets.SecretsManagerOpts `yaml:"secretsManagerOpts"`
-	DatabaseOpts       db.DatabaseOpts            `yaml:"databaseOpts"`
+	DatabaseOpts       database.DatabaseOpts      `yaml:"databaseOpts"`
 	Env                string                     `yaml:"env"`
+	DataRefreshSeconds int                        `yaml:"dataRefreshSeconds"`
 }
 type Dependencies struct {
 	Logger         *logrus.Logger
 	Tracer         tracer.TracerCreator
 	SecretsManager secrets.SecretsManager
-	Database       *db.Database
+	Database       *database.Database
+	AuthUsers      map[string]*common.User
+	AccessTokens   map[string]*common.AccessToken
 }
 
 func ReadOpts(filename string) (DependenciesInitOpts, error) {
@@ -62,14 +67,48 @@ func MakeDependencies(ctx context.Context, opts DependenciesInitOpts) (*Dependen
 	if err != nil {
 		return nil, err
 	}
-	db, err := db.NewDatabase(logger, tracer, opts.DatabaseOpts)
+	db, err := database.NewDatabase(logger, tracer, opts.DatabaseOpts)
 	if err != nil {
 		return nil, err
 	}
-	return &Dependencies{
+
+	authUsers, err := database.SelectUsersForAuth(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+
+	accessTokens, err := database.SelectAccessTokensForAuth(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+	deps := &Dependencies{
 		Logger:         logger,
 		Tracer:         tracer,
 		SecretsManager: secretsManager,
 		Database:       db,
-	}, nil
+		AuthUsers:      authUsers,
+		AccessTokens:   accessTokens,
+	}
+
+	timer := time.NewTimer(time.Duration(opts.DataRefreshSeconds) * time.Second)
+	go func() {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Here?")
+			return
+		case <-timer.C:
+			fmt.Println("Here 2?")
+			authUsers, err := database.SelectUsersForAuth(ctx, db)
+			if err != nil {
+				logger.Errorf("Error in SelectUsersForAuth refresh: %v", err)
+			}
+			deps.AuthUsers = authUsers
+			accessTokens, err := database.SelectAccessTokensForAuth(ctx, db)
+			if err != nil {
+				logger.Errorf("Error in SelectAccessTokensForAuth refresh: %v", err)
+			}
+			deps.AccessTokens = accessTokens
+		}
+	}()
+	return deps, nil
 }
