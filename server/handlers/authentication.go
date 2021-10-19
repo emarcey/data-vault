@@ -20,12 +20,13 @@ func EndpointClientAuthenticationWrapper(e endpoint.Endpoint, op string, deps *d
 			deps.Logger.Error("Error authenticating %s: %v", op, err)
 			return nil, common.NewAuthorizationError()
 		}
-		clientSecret, err := common.HashSha256(common.FetchStringFromContextHeaders(ctx, common.HEADER_CLIENT_SECRET))
+		clientSecretRaw, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_CLIENT_SECRET)
 		if err != nil {
 			tracer.CaptureException(err)
 			deps.Logger.Error("Error authenticating %s: %v", op, err)
 			return nil, common.NewAuthorizationError()
 		}
+		clientSecret := common.HashSha256(clientSecretRaw)
 
 		user, ok := deps.AuthUsers[fmt.Sprintf(`%s_%s`, clientId, clientSecret)]
 		if !ok {
@@ -50,13 +51,14 @@ func EndpointAccessTokenAuthenticationWrapper(e endpoint.Endpoint, op string, de
 		tracer := deps.Tracer(ctx, op)
 		defer tracer.Close()
 
-		hashedAuthToken, err := common.HashSha256(common.FetchStringFromContextHeaders(ctx, common.HEADER_ACCESS_TOKEN))
+		authTokenRaw, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_ACCESS_TOKEN)
 		if err != nil {
 			tracer.CaptureException(err)
 			deps.Logger.Error("Error authenticating %s: %v", op, err)
 			return nil, common.NewAuthorizationError()
 		}
-		_, ok := deps.AccessTokens[hashedAuthToken]
+		authToken := common.HashSha256(authTokenRaw)
+		_, ok := deps.AccessTokens[authToken]
 		if !ok {
 			internalError := fmt.Errorf("Auth Token not found")
 			tracer.CaptureException(internalError)

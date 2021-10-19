@@ -2,7 +2,6 @@ package dependencies
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"time"
 
@@ -18,12 +17,13 @@ import (
 )
 
 type DependenciesInitOpts struct {
-	HttpAddr           string                     `yaml:"httpAddr`
+	HttpAddr           string                     `yaml:"httpAddr"`
 	LoggerType         string                     `yaml:"loggerType"`
 	SecretsManagerOpts secrets.SecretsManagerOpts `yaml:"secretsManagerOpts"`
 	DatabaseOpts       database.DatabaseOpts      `yaml:"databaseOpts"`
 	Env                string                     `yaml:"env"`
 	DataRefreshSeconds int                        `yaml:"dataRefreshSeconds"`
+	Version            string                     `yaml:"version"`
 }
 type Dependencies struct {
 	Logger         *logrus.Logger
@@ -94,10 +94,8 @@ func MakeDependencies(ctx context.Context, opts DependenciesInitOpts) (*Dependen
 	go func() {
 		select {
 		case <-ctx.Done():
-			fmt.Println("Here?")
 			return
 		case <-timer.C:
-			fmt.Println("Here 2?")
 			authUsers, err := database.SelectUsersForAuth(ctx, db)
 			if err != nil {
 				logger.Errorf("Error in SelectUsersForAuth refresh: %v", err)

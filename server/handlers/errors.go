@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"emarcey/data-vault/common"
@@ -11,7 +12,7 @@ import (
 // encodeError JSON encodes the supplied error
 func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	if err == nil {
-		err = fmt.Error("EncodeError called with nil error")
+		err = fmt.Errorf("EncodeError called with nil error")
 	}
 	errorCode := 500
 	newErr, ok := err.(common.ErrorWithCode)

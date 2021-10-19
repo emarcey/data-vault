@@ -3,15 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"emarcey/data-vault/dependencies"
-	"emarcey/data-vault/dependencies/secrets"
+	"emarcey/data-vault/server"
 )
 
 func main() {
-	fmt.Printf("Hello\n")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	opts, err := dependencies.ReadOpts("./server_conf.yml")
@@ -26,27 +28,48 @@ func main() {
 		os.Exit(1)
 	}
 
-	deps.Logger.Info("Heyo")
-	deps.Logger.Debug("Heyo")
-	tracer := deps.Tracer(ctx, "dummy")
-	defer tracer.Close()
-	tracer.AddBreadcrumb(map[string]interface{}{"hi": "there"})
+	service := server.NewService(opts.Version, deps)
+	handler := server.MakeHttpHandler(service, deps)
 
-	dummySecret := secrets.NewSecret("tableName", "rowId", "columnName", "idHash", "key", "iv")
-	fmt.Printf("Secret: %v\n", dummySecret)
-	oSecret, err := deps.SecretsManager.GetOrPutSecret(ctx, dummySecret)
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-	dummySecret2 := secrets.NewSecret("tableName", "rowId", "columnName", "idHash", "key", "ivvvvv")
-	oSecret2, err := deps.SecretsManager.GetOrPutSecret(ctx, dummySecret2)
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-	fmt.Printf("Secret: %v\n", oSecret)
-	fmt.Printf("Secret2: %v\n", oSecret2)
+	// Listen for application termination.
+	errs := make(chan error)
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+		errs <- fmt.Errorf("%s", <-c)
+	}()
 
-	time.Sleep(8 * time.Second)
+	readTimeout, _ := time.ParseDuration("30s")
+	writTimeout, _ := time.ParseDuration("30s")
+	idleTimeout, _ := time.ParseDuration("60s")
+
+	fmt.Println(opts)
+	serve := &http.Server{
+		Addr:         opts.HttpAddr,
+		Handler:      handler,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writTimeout,
+		IdleTimeout:  idleTimeout,
+	}
+	shutdownServer := func() {
+		if err := serve.Shutdown(context.TODO()); err != nil {
+			deps.Logger.Info("shutdown", err)
+		}
+	}
+
+	// Start main HTTP server
+	go func() {
+		deps.Logger.Infof(opts.HttpAddr)
+
+		deps.Logger.Infof(fmt.Sprintf("startup binding to %s for HTTP server", opts.HttpAddr))
+		if err := serve.ListenAndServe(); err != nil {
+			errs <- err
+			deps.Logger.Info("exit ", err)
+		}
+	}()
+
+	if err := <-errs; err != nil {
+		shutdownServer()
+		deps.Logger.Info("exit ", err)
+	}
 }

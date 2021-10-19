@@ -1,5 +1,6 @@
 ---
-httpAddr: http://localhost:9090
+version: v0.0.1
+httpAddr: localhost:9090
 loggerType: json
 env: local
 dataRefreshSeconds: 5
