@@ -17,13 +17,13 @@ func EndpointClientAuthenticationWrapper(e endpoint.Endpoint, op string, deps *d
 		clientId, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_CLIENT_ID)
 		if err != nil {
 			tracer.CaptureException(err)
-			deps.Logger.Error("Error authenticating %s: %v", op, err)
+			deps.Logger.Errorf("Error authenticating %s: %v", op, err)
 			return nil, common.NewAuthorizationError()
 		}
 		clientSecretRaw, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_CLIENT_SECRET)
 		if err != nil {
 			tracer.CaptureException(err)
-			deps.Logger.Error("Error authenticating %s: %v", op, err)
+			deps.Logger.Errorf("Error authenticating %s: %v", op, err)
 			return nil, common.NewAuthorizationError()
 		}
 		clientSecret := common.HashSha256(clientSecretRaw)
@@ -32,14 +32,14 @@ func EndpointClientAuthenticationWrapper(e endpoint.Endpoint, op string, deps *d
 		if !ok {
 			internalError := fmt.Errorf("User not found for clientId %s", clientId)
 			tracer.CaptureException(internalError)
-			deps.Logger.Error("Error authenticating %s: %v", op, internalError)
+			deps.Logger.Errorf("Error authenticating %s: %v", op, internalError)
 			return nil, common.NewAuthorizationError()
 		}
 
 		if checkAdmin && user.Type != "admin" {
 			internalError := fmt.Errorf("User %s is not an admin.", user.Id)
 			tracer.CaptureException(internalError)
-			deps.Logger.Error("Error authenticating %s: %v", op, internalError)
+			deps.Logger.Errorf("Error authenticating %s: %v", op, internalError)
 			return nil, common.NewAuthorizationError()
 		}
 		return e(tracer.Context(), request)
@@ -54,7 +54,7 @@ func EndpointAccessTokenAuthenticationWrapper(e endpoint.Endpoint, op string, de
 		authTokenRaw, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_ACCESS_TOKEN)
 		if err != nil {
 			tracer.CaptureException(err)
-			deps.Logger.Error("Error authenticating %s: %v", op, err)
+			deps.Logger.Errorf("Error authenticating %s: %v", op, err)
 			return nil, common.NewAuthorizationError()
 		}
 		authToken := common.HashSha256(authTokenRaw)
@@ -62,7 +62,7 @@ func EndpointAccessTokenAuthenticationWrapper(e endpoint.Endpoint, op string, de
 		if !ok {
 			internalError := fmt.Errorf("Auth Token not found")
 			tracer.CaptureException(internalError)
-			deps.Logger.Error("Error authenticating %s: %v", op, internalError)
+			deps.Logger.Errorf("Error authenticating %s: %v", op, internalError)
 			return nil, common.NewAuthorizationError()
 		}
 		return e(tracer.Context(), request)

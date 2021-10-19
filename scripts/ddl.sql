@@ -39,7 +39,7 @@ INSERT INTO admin.user_type VALUES ('other');
 CREATE TABLE admin.users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     name TEXT NOT NULL,
     client_secret_hash TEXT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT true,
@@ -59,7 +59,7 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 CREATE TABLE admin.access_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     user_id UUID REFERENCES admin.users(id) NOT NULL,
     is_latest BOOLEAN NOT NULL,
     invalid_at TIMESTAMPTZ NOT NULL
@@ -81,7 +81,7 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 CREATE TABLE admin.table_permissions (
     user_id UUID REFERENCES admin.users(id) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     table_name TEXT NOT NULL CHECK(table_name = get_table_name(table_name)),
     is_decrypt_allowed BOOLEAN NOT NULL DEFAULT false,
     created_by UUID REFERENCES admin.users(id) NOT NULL,
@@ -105,7 +105,7 @@ CREATE TABLE admin.encrypted_keys (
     row_id UUID NOT NULL,
     column_name TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     hash_value TEXT NOT NULL
 );
 
@@ -124,5 +124,9 @@ CREATE TABLE admin.encrypted_key_metadata (
     value TEXT NOT NULL,
     PRIMARY KEY (encrypted_key_id, encrypted_key_metadata_type_id)
 );
+
+
+--raw secret: 9e5d5da6-24ed-42a9-a105-c531bed8175d
+INSERT INTO admin.users (name, client_secret_hash, type) VALUES ('admin', 'sha256:9dbcc64bd8006081f719719f9be420059b907429710bc64215c843596c6d0d64', 'admin');
 
 COMMIT;

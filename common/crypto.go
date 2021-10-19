@@ -1,13 +1,12 @@
 package common
 
 import (
-	"fmt"
-
 	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 )
 
 func HashSha256(s string) string {
-	h := sha256.New()
-	h.Write([]byte(s))
-	return fmt.Sprintf("sha256:%s", string(h.Sum(nil)))
+	hash := sha256.Sum256([]byte(s))
+	return fmt.Sprintf("sha256:%s", hex.EncodeToString(hash[:]))
 }

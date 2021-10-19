@@ -90,22 +90,25 @@ func MakeDependencies(ctx context.Context, opts DependenciesInitOpts) (*Dependen
 		AccessTokens:   accessTokens,
 	}
 
-	timer := time.NewTimer(time.Duration(opts.DataRefreshSeconds) * time.Second)
+	timer := time.NewTicker(time.Duration(opts.DataRefreshSeconds) * time.Second)
 	go func() {
-		select {
-		case <-ctx.Done():
-			return
-		case <-timer.C:
-			authUsers, err := database.SelectUsersForAuth(ctx, db)
-			if err != nil {
-				logger.Errorf("Error in SelectUsersForAuth refresh: %v", err)
+		for true {
+			select {
+			case <-ctx.Done():
+				logger.Warn("Context cancelled. No more refreshes.")
+				return
+			case <-timer.C:
+				authUsers, err := database.SelectUsersForAuth(ctx, db)
+				if err != nil {
+					logger.Errorf("Error in SelectUsersForAuth refresh: %v", err)
+				}
+				deps.AuthUsers = authUsers
+				accessTokens, err := database.SelectAccessTokensForAuth(ctx, db)
+				if err != nil {
+					logger.Errorf("Error in SelectAccessTokensForAuth refresh: %v", err)
+				}
+				deps.AccessTokens = accessTokens
 			}
-			deps.AuthUsers = authUsers
-			accessTokens, err := database.SelectAccessTokensForAuth(ctx, db)
-			if err != nil {
-				logger.Errorf("Error in SelectAccessTokensForAuth refresh: %v", err)
-			}
-			deps.AccessTokens = accessTokens
 		}
 	}()
 	return deps, nil
