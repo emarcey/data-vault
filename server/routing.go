@@ -5,12 +5,31 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 
 	"emarcey/data-vault/dependencies"
 	"emarcey/data-vault/server/handlers"
 )
+
+type endpointBuilder struct {
+	endpoint endpoint.Endpoint
+	decoder  httptransport.DecodeRequestFunc
+	method   string
+	path     string
+}
+
+func makeAdminMethods(r *mux.Router, deps *dependencies.Dependencies, endpoints []endpointBuilder, encoder httptransport.EncodeResponseFunc, options ...httptransport.ServerOption) {
+	for _, endpoint := range endpoints {
+		r.Methods(endpoint.method).Path(endpoint.path).Handler(httptransport.NewServer(
+			handlers.HandleAdminEndpoints(endpoint.endpoint, endpoint.path, deps),
+			endpoint.decoder,
+			encoder,
+			options...,
+		))
+	}
+}
 
 func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 	r := mux.NewRouter()
@@ -23,13 +42,18 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(s.Version()))
 	})
-	r.Methods("GET").Path("/users").Handler(httptransport.NewServer(
-		handlers.HandleAdminEndpoints(listUsersEndpoint(s), "ListUsers", deps),
-		decodeListUsersRequest,
-		encodeResponse,
-		options...,
-	))
+	adminEndpoints := []endpointBuilder{
+		listUsersEndpoint(s),
+		getUserEndpoint(s),
+		deleteUserEndpoint(s),
+		createUserEndpoint(s),
+	}
+	makeAdminMethods(r, deps, adminEndpoints, encodeResponse, options...)
 	return r
+}
+
+func noOpDecodeRequest(_ context.Context, _ *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
 // encodeResponse is the common method to encode all response types to the
@@ -37,7 +61,6 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 // reason to provide anything more specific. It's certainly possible to
 // specialize on a per-response (per-method) basis.
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
-	// Don't overwrite a header (i.e. called from encodeTextResponse)
 	if v := w.Header().Get("Content-Type"); v == "" {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		// Only write json body if we're setting response as json

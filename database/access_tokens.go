@@ -22,8 +22,9 @@ func SelectAccessTokensForAuth(ctx context.Context, db *Database) (map[string]*c
 	`
 	rows, err := db.QueryContext(tracer.Context(), query)
 	if err != nil {
-		tracer.CaptureException(err)
-		return nil, common.NewDatabaseError(operation, err.Error())
+		dbErr := common.NewDatabaseError(err, operation, "")
+		tracer.CaptureException(dbErr)
+		return nil, dbErr
 	}
 	defer rows.Close()
 
@@ -33,17 +34,17 @@ func SelectAccessTokensForAuth(ctx context.Context, db *Database) (map[string]*c
 		var row common.AccessToken
 		err = rows.Scan(&row.Id, &row.UserId, &row.InvalidAt, &row.IsLatest)
 		if err != nil {
-			newErr := common.NewDatabaseError(operation, "Error in scan operation: %v", err)
-			tracer.CaptureException(newErr)
-			return nil, newErr
+			dbErr := common.NewDatabaseError(err, operation, "Error in scan operation: %v", err)
+			tracer.CaptureException(dbErr)
+			return nil, dbErr
 		}
 		accessTokenMap[row.Id] = &row
 	}
 	err = rows.Err()
 	if err != nil {
-		newErr := common.NewDatabaseError(operation, "Error in rows.Err() operation: %v", err)
-		tracer.CaptureException(newErr)
-		return nil, newErr
+		dbErr := common.NewDatabaseError(err, operation, "Error in rows.Err() operation: %v", err)
+		tracer.CaptureException(dbErr)
+		return nil, dbErr
 	}
 	return accessTokenMap, nil
 }

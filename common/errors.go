@@ -2,6 +2,8 @@ package common
 
 import (
 	"fmt"
+
+	"github.com/lib/pq"
 )
 
 type ErrorWithCode interface {
@@ -50,6 +52,7 @@ func NewMongoGetOrPutSecretError(message string, messageArgs ...interface{}) Sec
 type DatabaseError struct {
 	operation   string
 	message     string
+	code        int
 	messageArgs []interface{}
 }
 
@@ -59,11 +62,29 @@ func (e DatabaseError) Error() string {
 }
 
 func (e DatabaseError) Code() int {
-	return 500
+	return e.code
 }
 
-func NewDatabaseError(operation, message string, messageArgs ...interface{}) DatabaseError {
-	return DatabaseError{operation: operation, message: message, messageArgs: messageArgs}
+func NewDatabaseError(originalErr error, operation, message string, messageArgs ...interface{}) ErrorWithCode {
+	pqErr, ok := originalErr.(*pq.Error)
+	if ok && pqErr != nil {
+		// not exhaustive, adding as I find potential errors
+		switch pqErr.Code {
+		case "23505":
+			return NewResourceAlreadyExistsError(operation, pqErr.Detail)
+		case "23503":
+			return NewInvalidParamsError(operation, pqErr.Detail)
+		case "22P02":
+			return NewInvalidParamsError(operation, pqErr.Message)
+		default:
+		}
+
+	}
+	if message == "" {
+		message = originalErr.Error()
+	}
+	return DatabaseError{operation: operation, message: message, messageArgs: messageArgs, code: 500}
+
 }
 
 type AuthorizationError struct {
@@ -97,4 +118,39 @@ func (e InvalidParamsError) Code() int {
 
 func NewInvalidParamsError(functionName string, message string, messageArgs ...interface{}) InvalidParamsError {
 	return InvalidParamsError{functionName: functionName, message: message, messageArgs: messageArgs}
+}
+
+type ResourceAlreadyExistsError struct {
+	operation string
+	message   string
+}
+
+func (e ResourceAlreadyExistsError) Error() string {
+	return fmt.Sprintf("Error for operation, %s: %s", e.operation, e.message)
+}
+
+func (e ResourceAlreadyExistsError) Code() int {
+	return 409
+}
+
+func NewResourceAlreadyExistsError(operation, message string) ResourceAlreadyExistsError {
+	return ResourceAlreadyExistsError{operation: operation, message: message}
+}
+
+type ResourceNotFoundError struct {
+	operation string
+	field     string
+	value     string
+}
+
+func (e ResourceNotFoundError) Error() string {
+	return fmt.Sprintf("Resource not found in operation, %s, for value, %s, at field, %s", e.operation, e.value, e.field)
+}
+
+func (e ResourceNotFoundError) Code() int {
+	return 404
+}
+
+func NewResourceNotFoundError(operation, field, value string) ResourceNotFoundError {
+	return ResourceNotFoundError{operation: operation, field: field, value: value}
 }

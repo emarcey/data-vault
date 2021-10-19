@@ -34,7 +34,7 @@ CREATE TABLE admin.user_type (
 );
 
 INSERT INTO admin.user_type VALUES ('admin');
-INSERT INTO admin.user_type VALUES ('other');
+INSERT INTO admin.user_type VALUES ('developer');
 
 CREATE TABLE admin.users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -43,7 +43,6 @@ func main() {
 	writTimeout, _ := time.ParseDuration("30s")
 	idleTimeout, _ := time.ParseDuration("60s")
 
-	fmt.Println(opts)
 	serve := &http.Server{
 		Addr:         opts.HttpAddr,
 		Handler:      handler,
