@@ -16,4 +16,4 @@ vendor/
 server_conf.yml
 
 # regular binary
-# ./data-vault
+data-vault
