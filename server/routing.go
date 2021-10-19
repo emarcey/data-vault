@@ -47,6 +47,7 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		getUserEndpoint(s),
 		deleteUserEndpoint(s),
 		createUserEndpoint(s),
+		getAccessTokenEndpoint(s),
 	}
 	makeAdminMethods(r, deps, adminEndpoints, encodeResponse, options...)
 	return r

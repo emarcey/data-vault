@@ -68,7 +68,7 @@ func (e DatabaseError) Code() int {
 func NewDatabaseError(originalErr error, operation, message string, messageArgs ...interface{}) ErrorWithCode {
 	pqErr, ok := originalErr.(*pq.Error)
 	if ok && pqErr != nil {
-		// not exhaustive, adding as I find potential errors
+		// not exhaustive, adding as I find potential errors I want to clean up
 		switch pqErr.Code {
 		case "23505":
 			return NewResourceAlreadyExistsError(operation, pqErr.Detail)
@@ -87,8 +87,7 @@ func NewDatabaseError(originalErr error, operation, message string, messageArgs 
 
 }
 
-type AuthorizationError struct {
-}
+type AuthorizationError struct{}
 
 func (e AuthorizationError) Error() string {
 	return fmt.Sprintf("Authorization Not Valid.")

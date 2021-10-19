@@ -16,15 +16,21 @@ import (
 	"emarcey/data-vault/dependencies/secrets"
 )
 
+type ServerConfigs struct {
+	AccessTokenHours   int `yaml:"accessTokenHours"`
+	DataRefreshSeconds int `yaml:"dataRefreshSeconds"`
+}
+
 type DependenciesInitOpts struct {
 	HttpAddr           string                     `yaml:"httpAddr"`
 	LoggerType         string                     `yaml:"loggerType"`
 	SecretsManagerOpts secrets.SecretsManagerOpts `yaml:"secretsManagerOpts"`
 	DatabaseOpts       database.DatabaseOpts      `yaml:"databaseOpts"`
 	Env                string                     `yaml:"env"`
-	DataRefreshSeconds int                        `yaml:"dataRefreshSeconds"`
 	Version            string                     `yaml:"version"`
+	ServerConfigs      *ServerConfigs             `yaml:"serverConfigs"`
 }
+
 type Dependencies struct {
 	Logger         *logrus.Logger
 	Tracer         tracer.TracerCreator
@@ -32,6 +38,7 @@ type Dependencies struct {
 	Database       *database.Database
 	AuthUsers      map[string]*common.User
 	AccessTokens   map[string]*common.AccessToken
+	ServerConfigs  *ServerConfigs
 }
 
 func ReadOpts(filename string) (DependenciesInitOpts, error) {
@@ -88,9 +95,10 @@ func MakeDependencies(ctx context.Context, opts DependenciesInitOpts) (*Dependen
 		Database:       db,
 		AuthUsers:      authUsers,
 		AccessTokens:   accessTokens,
+		ServerConfigs:  opts.ServerConfigs,
 	}
 
-	timer := time.NewTicker(time.Duration(opts.DataRefreshSeconds) * time.Second)
+	timer := time.NewTicker(time.Duration(opts.ServerConfigs.DataRefreshSeconds) * time.Second)
 	go func() {
 		for true {
 			select {

@@ -57,7 +57,7 @@ CREATE TRIGGER set_admin__users_timestamp
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TABLE admin.access_tokens (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id_hash TEXT PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     user_id UUID REFERENCES admin.users(id) NOT NULL,

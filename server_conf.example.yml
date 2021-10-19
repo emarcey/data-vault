@@ -3,7 +3,9 @@ version: v0.0.1
 httpAddr: localhost:9090
 loggerType: json
 env: local
-dataRefreshSeconds: 5
+serverConfigs:
+  dataRefreshSeconds: 5
+  accessTokenHours: 24
 secretsManagerOpts:
   managerType:
   mongoOpts:
