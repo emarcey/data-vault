@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 
 	"emarcey/data-vault/common"
 )
@@ -33,14 +32,13 @@ func SelectUsersForAuth(ctx context.Context, db *Database) (map[string]*common.U
 
 	for rows.Next() {
 		var row common.User
-		var clientSecretHash string
-		err = rows.Scan(&row.Id, &row.Name, &row.IsActive, &row.Type, &clientSecretHash)
+		err = rows.Scan(&row.Id, &row.Name, &row.IsActive, &row.Type, &row.SecretHash)
 		if err != nil {
 			dbErr := common.NewDatabaseError(err, operation, "Error in scan operation: %v", err)
 			tracer.CaptureException(dbErr)
 			return nil, dbErr
 		}
-		userMap[fmt.Sprintf("%s_%s", row.Id, clientSecretHash)] = &row
+		userMap[row.Id] = &row
 	}
 	err = rows.Err()
 	if err != nil {
@@ -105,6 +103,7 @@ func GetUserById(ctx context.Context, db *Database, userId string) (*common.User
 			u.type
 	FROM	admin.users u
 	WHERE	id = $1
+		AND u.is_active
 	`
 	rows, err := db.QueryContext(tracer.Context(), query, userId)
 	if err != nil {
@@ -161,7 +160,7 @@ func DeleteUser(ctx context.Context, db *Database, userId string) error {
 		tracer.CaptureException(dbErr)
 		return dbErr
 	}
-	db.logger.Debugf("%s updated %d rows", operation, rowsAffected)
+	db.logger.Debugf("%s soft deleted %d rows", operation, rowsAffected)
 
 	return nil
 }

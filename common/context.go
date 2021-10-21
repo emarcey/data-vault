@@ -6,6 +6,7 @@ import (
 )
 
 var HeadersContextKey struct{}
+var UserContextKey struct{}
 
 func FetchStringFromContextHeaders(ctx context.Context, key string) (string, error) {
 	op := "FetchStringFromContextHeaders"
@@ -27,4 +28,25 @@ func FetchStringFromContextHeaders(ctx context.Context, key string) (string, err
 	}
 
 	return val[0], nil
+}
+
+func InjectUserIntoContext(ctx context.Context, user *User) context.Context {
+	return context.WithValue(ctx, UserContextKey, user)
+}
+
+func FetchUserFromContext(ctx context.Context) (*User, error) {
+	op := "FetchUserFromContext"
+	userInterface := ctx.Value(UserContextKey)
+	if userInterface == nil {
+		return nil, NewInvalidParamsError(op, "No user in context.")
+	}
+	user, ok := userInterface.(*User)
+	if !ok {
+		return nil, NewInvalidParamsError(op, "Expected user of type *common.User. Got %T", userInterface)
+	}
+	if user == nil {
+		return nil, NewInvalidParamsError(op, "User in context was nil")
+	}
+
+	return user, nil
 }

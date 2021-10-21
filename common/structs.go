@@ -5,10 +5,11 @@ import (
 )
 
 type User struct {
-	Id       string `json:"id"`
-	Name     string `json:"name"`
-	IsActive bool   `json:"is_active"`
-	Type     string `json:"type"`
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	IsActive   bool   `json:"is_active"`
+	Type       string `json:"type"`
+	SecretHash string `json:"-"`
 }
 
 type AccessToken struct {
@@ -16,6 +17,13 @@ type AccessToken struct {
 	UserId    string    `json:"user_id"`
 	InvalidAt time.Time `json:"invalid_at"`
 	IsLatest  bool      `json:"is_latest"`
+}
+
+type Table struct {
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	CreatedBy string `json:"created_by"`
+	UpdatedBy string `json:"updated_by"`
 }
 
 type TablePermissions struct {

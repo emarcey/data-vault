@@ -15,7 +15,8 @@ type Service interface {
 	GetUser(ctx context.Context, id string) (*common.User, error)
 	CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error)
 	DeleteUser(ctx context.Context, id string) error
-	GetAccessToken(ctx context.Context, userId string) (*common.AccessToken, error)
+	GetAccessToken(ctx context.Context, user *common.User) (*common.AccessToken, error)
+	ListTables(ctx context.Context, user *common.User) ([]*common.Table, error)
 }
 
 type service struct {
@@ -74,21 +75,25 @@ func (s *service) DeleteUser(ctx context.Context, userId string) error {
 	return database.DeleteUser(ctx, s.deps.Database, userId)
 }
 
-func (s *service) GetAccessToken(ctx context.Context, userId string) (*common.AccessToken, error) {
-	err := database.DeprecateLatestAccessToken(ctx, s.deps.Database, userId)
+func (s *service) GetAccessToken(ctx context.Context, user *common.User) (*common.AccessToken, error) {
+	err := database.DeprecateLatestAccessToken(ctx, s.deps.Database, user.Id)
 	if err != nil {
 		return nil, err
 	}
 	accessToken := common.GenUuid()
 	invalidAt := time.Now().Add(time.Duration(s.deps.ServerConfigs.AccessTokenHours) * time.Hour)
-	err = database.CreateAccessToken(ctx, s.deps.Database, userId, common.HashSha256(accessToken), invalidAt)
+	err = database.CreateAccessToken(ctx, s.deps.Database, user.Id, common.HashSha256(accessToken), invalidAt)
 	if err != nil {
 		return nil, err
 	}
 	return &common.AccessToken{
 		Id:        accessToken,
-		UserId:    userId,
+		UserId:    user.Id,
 		IsLatest:  true,
 		InvalidAt: invalidAt,
 	}, nil
+}
+
+func (s *service) ListTables(ctx context.Context, user *common.User) ([]*common.Table, error) {
+	return database.ListTables(ctx, s.deps.Database, user)
 }

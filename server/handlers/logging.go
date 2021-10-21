@@ -3,13 +3,13 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 
 	"emarcey/data-vault/dependencies"
 )
 
+// EndpointLoggingWrapper adds logs to every endpoint, exactly like it sounds
 func EndpointLoggingWrapper(e endpoint.Endpoint, op string, deps *dependencies.Dependencies) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		deps.Logger.Infof("Endpoint %s called with request: %v", op, request)
@@ -18,14 +18,14 @@ func EndpointLoggingWrapper(e endpoint.Endpoint, op string, deps *dependencies.D
 			deps.Logger.Errorf("Endpoint %s returned with error: %v", op, err)
 			return nil, err
 		}
-		marshalledResp := ""
+		var logResp interface{}
 		marshalledRespBytes, err := json.Marshal(resp)
 		if err != nil {
-			marshalledResp = fmt.Sprintf("Could not marshal response: %v", err)
+			logResp = resp
 		} else {
-			marshalledResp = string(marshalledRespBytes)
+			logResp = string(marshalledRespBytes)
 		}
-		deps.Logger.Infof("Endpoint %s returned: %v", op, marshalledResp)
+		deps.Logger.Infof("Endpoint %s returned: %v", op, logResp)
 		return resp, err
 	}
 }

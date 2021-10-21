@@ -20,10 +20,10 @@ type endpointBuilder struct {
 	path     string
 }
 
-func makeAdminMethods(r *mux.Router, deps *dependencies.Dependencies, endpoints []endpointBuilder, encoder httptransport.EncodeResponseFunc, options ...httptransport.ServerOption) {
+func makeMethods(r *mux.Router, deps *dependencies.Dependencies, handler handlers.EndpointHandler, endpoints []endpointBuilder, encoder httptransport.EncodeResponseFunc, options ...httptransport.ServerOption) {
 	for _, endpoint := range endpoints {
 		r.Methods(endpoint.method).Path(endpoint.path).Handler(httptransport.NewServer(
-			handlers.HandleAdminEndpoints(endpoint.endpoint, endpoint.path, deps),
+			handler(endpoint.endpoint, endpoint.path, deps),
 			endpoint.decoder,
 			encoder,
 			options...,
@@ -47,9 +47,18 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		getUserEndpoint(s),
 		deleteUserEndpoint(s),
 		createUserEndpoint(s),
+	}
+	makeMethods(r, deps, handlers.HandleAdminEndpoints, adminEndpoints, encodeResponse, options...)
+
+	clientEndpoints := []endpointBuilder{
 		getAccessTokenEndpoint(s),
 	}
-	makeAdminMethods(r, deps, adminEndpoints, encodeResponse, options...)
+	makeMethods(r, deps, handlers.HandleClientEndpoints, clientEndpoints, encodeResponse, options...)
+
+	accessTokenEndpoints := []endpointBuilder{
+		listTablesEndpoint(s),
+	}
+	makeMethods(r, deps, handlers.HandleTokenEndpoints, accessTokenEndpoints, encodeResponse, options...)
 	return r
 }
 

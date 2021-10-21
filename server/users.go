@@ -94,17 +94,17 @@ func createUserEndpoint(s Service) endpointBuilder {
 }
 
 func getAccessTokenEndpoint(s Service) endpointBuilder {
-	e := func(ctx context.Context, userIdInterface interface{}) (interface{}, error) {
-		userId, ok := userIdInterface.(string)
-		if !ok {
-			return nil, common.NewInvalidParamsError("DeleteUser", "Expected user ID of type string. Got %T", userIdInterface)
+	e := func(ctx context.Context, _ interface{}) (interface{}, error) {
+		user, err := common.FetchUserFromContext(ctx)
+		if err != nil {
+			return nil, err
 		}
-		return s.GetAccessToken(ctx, userId)
+		return s.GetAccessToken(ctx, user)
 	}
 	return endpointBuilder{
 		endpoint: e,
-		decoder:  decodeUserIdRequest,
-		method:   "POST",
-		path:     "/users/{id}/access_token",
+		decoder:  noOpDecodeRequest,
+		method:   "GET",
+		path:     "/access_token",
 	}
 }

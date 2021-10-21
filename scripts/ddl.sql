@@ -16,18 +16,6 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;
 
-CREATE OR REPLACE FUNCTION get_table_name(in_table_name TEXT)
-    RETURNS TEXT AS $$
-BEGIN
-    RETURN (
-        SELECT  table_name
-        FROM    information_schema.tables
-        WHERE   table_name = in_table_name
-            AND table_schema = 'data'
-    );
-END;
-$$ LANGUAGE PLPGSQL;
-
 CREATE TABLE admin.user_type (
     id TEXT PRIMARY KEY NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
@@ -49,7 +37,7 @@ CREATE TABLE admin.users (
 COMMENT ON TABLE admin.users IS 'Users stores information about each user, including their client_id & a hash of the secret used to generate an access token.';
 COMMENT ON COLUMN admin.users.client_secret_hash IS 'A hash of the unique client secret generated for this user. Of the form "{encryptionMethod}|||{encryptedValue}"';
 
-CREATE UNIQUE INDEX uq__admin__users__name ON admin.users(name);
+CREATE UNIQUE INDEX uq__admin__users__name ON admin.users(name) WHERE is_active;
 
 CREATE TRIGGER set_admin__users_timestamp
     BEFORE UPDATE ON admin.users
@@ -71,37 +59,56 @@ COMMENT ON COLUMN admin.access_tokens.invalid_at IS 'Datetime at which access to
 
 CREATE INDEX idx__admin__access_tokens__user_is_valid ON admin.access_tokens(user_id, is_latest);
 CREATE INDEX idx__admin__access_tokens__invalid_at ON admin.access_tokens(invalid_at);
-CREATE UNIQUE INDEX uq__admin__access_tokens__user_valid ON admin.access_tokens(user_id) WHERE is_latest IS NOT TRUE;
+CREATE UNIQUE INDEX uq__admin__access_tokens__user_valid ON admin.access_tokens(user_id) WHERE is_latest;
 
 CREATE TRIGGER set_admin__access_tokens_timestamp
     BEFORE UPDATE ON admin.access_tokens
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
-CREATE TABLE admin.table_permissions (
+
+CREATE TABLE admin.data_tables (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    created_by UUID REFERENCES admin.users(id) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    updated_by UUID REFERENCES admin.users(id) NOT NULL,
+    is_active BOOLEAN NOT NULL
+);
+
+COMMENT ON TABLE admin.data_tables IS 'Data tables stores all user created tables for data being stored. Kept separate from information schema so we can log who did what.';
+CREATE UNIQUE INDEX uq__admin__data_tables__name ON admin.data_tables(name) WHERE is_active;
+
+CREATE TRIGGER set_admin__data_tables_timestamp
+    BEFORE UPDATE ON admin.data_tables
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE TABLE admin.data_table_permissions (
     user_id UUID REFERENCES admin.users(id) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    table_name TEXT NOT NULL CHECK(table_name = get_table_name(table_name)),
+    table_id UUID NOT NULL REFERENCES admin.data_tables(id),
     is_decrypt_allowed BOOLEAN NOT NULL DEFAULT false,
     created_by UUID REFERENCES admin.users(id) NOT NULL,
     updated_by UUID REFERENCES admin.users(id) NOT NULL,
     is_active BOOLEAN NOT NULL,
-    PRIMARY KEY (user_id, table_name)
+    PRIMARY KEY (user_id, table_id)
 );
 
-COMMENT ON TABLE admin.table_permissions IS 'Table permissions grants access for a user to query a given table. Access should only be granted by an admin';
-COMMENT ON COLUMN admin.table_permissions.is_decrypt_allowed IS 'If true, user is allowed to decrypt results of query. If false, user can only get metadata';
+COMMENT ON TABLE admin.data_table_permissions IS 'Table permissions grants access for a user to query a given table. Access should only be granted by an admin';
+COMMENT ON COLUMN admin.data_table_permissions.is_decrypt_allowed IS 'If true, user is allowed to decrypt results of query. If false, user can only get metadata';
 
-CREATE TRIGGER set_admin__table_permissions_timestamp
-    BEFORE UPDATE ON admin.table_permissions
+CREATE TRIGGER set_admin__data_table_permissions_timestamp
+    BEFORE UPDATE ON admin.data_table_permissions
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 
 CREATE TABLE admin.encrypted_keys (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    table_name TEXT NOT NULL,
+    table_id UUID NOT NULL REFERENCES admin.data_tables(id),
     row_id UUID NOT NULL,
     column_name TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
@@ -110,7 +117,7 @@ CREATE TABLE admin.encrypted_keys (
 );
 
 CREATE INDEX idx__admin__encrypted_keys__hash_value ON admin.encrypted_keys(hash_value);
-CREATE UNIQUE INDEX uq__admin__encrypted_keys__table_row_column ON admin.encrypted_keys(table_name, row_id, column_name);
+CREATE UNIQUE INDEX uq__admin__encrypted_keys__table_row_column ON admin.encrypted_keys(table_id, row_id, column_name);
 
 CREATE TABLE admin.encrypted_key_metadata_type (
     id TEXT NOT NULL PRIMARY KEY,
@@ -127,6 +134,6 @@ CREATE TABLE admin.encrypted_key_metadata (
 
 
 --raw secret: 9e5d5da6-24ed-42a9-a105-c531bed8175d
-INSERT INTO admin.users (name, client_secret_hash, type) VALUES ('admin', 'sha256:9dbcc64bd8006081f719719f9be420059b907429710bc64215c843596c6d0d64', 'admin');
+INSERT INTO admin.users (id, name, client_secret_hash, type) VALUES ('03b6f72c-f3f4-43d9-a705-17b326924d74', 'admin', 'sha256:9dbcc64bd8006081f719719f9be420059b907429710bc64215c843596c6d0d64', 'admin');
 
 COMMIT;

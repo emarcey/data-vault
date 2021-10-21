@@ -9,7 +9,7 @@ import (
 	"emarcey/data-vault/common"
 )
 
-// encodeError JSON encodes the supplied error
+// EncodeError JSON encodes the supplied error
 func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	if err == nil {
 		err = fmt.Errorf("EncodeError called with nil error")
