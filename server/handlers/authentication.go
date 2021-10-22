@@ -16,31 +16,31 @@ func EndpointClientAuthenticationWrapper(e endpoint.Endpoint, op string, deps *d
 		tracer := deps.Tracer(ctx, op)
 		defer tracer.Close()
 
-		clientId, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_CLIENT_ID)
+		userId, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_CLIENT_ID)
 		if err != nil {
 			tracer.CaptureException(err)
 			deps.Logger.Errorf("Error authenticating %s: %v", op, err)
 			return nil, common.NewAuthorizationError()
 		}
 
-		clientSecretRaw, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_CLIENT_SECRET)
+		userSecretRaw, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_CLIENT_SECRET)
 		if err != nil {
 			tracer.CaptureException(err)
 			deps.Logger.Errorf("Error authenticating %s: %v", op, err)
 			return nil, common.NewAuthorizationError()
 		}
-		clientSecret := common.HashSha256(clientSecretRaw)
+		userSecret := common.HashSha256(userSecretRaw)
 
-		user, ok := deps.AuthUsers[clientId]
+		user, ok := deps.AuthUsers[userId]
 		if !ok {
-			internalError := fmt.Errorf("User not found for clientId %s", clientId)
+			internalError := fmt.Errorf("User not found for userId %s", userId)
 			tracer.CaptureException(internalError)
 			deps.Logger.Errorf("Error authenticating %s: %v", op, internalError)
 			return nil, common.NewAuthorizationError()
 		}
 
-		if user.SecretHash != clientSecret {
-			internalError := fmt.Errorf("Invalid secret for clientId %s", clientId)
+		if user.SecretHash != userSecret {
+			internalError := fmt.Errorf("Invalid secret for userId %s", userId)
 			tracer.CaptureException(internalError)
 			deps.Logger.Errorf("Error authenticating %s: %v", op, internalError)
 			return nil, common.NewAuthorizationError()

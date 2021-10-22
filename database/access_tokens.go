@@ -7,9 +7,9 @@ import (
 	"emarcey/data-vault/common"
 )
 
-func SelectAccessTokensForAuth(ctx context.Context, db *Database) (map[string]*common.AccessToken, error) {
+func SelectAccessTokensForAuth(ctx context.Context, db Database) (map[string]*common.AccessToken, error) {
 	operation := "SelectAccessTokensForAuth"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
@@ -50,9 +50,9 @@ func SelectAccessTokensForAuth(ctx context.Context, db *Database) (map[string]*c
 	return accessTokenMap, nil
 }
 
-func DeprecateLatestAccessToken(ctx context.Context, db *Database, userId string) error {
+func DeprecateLatestAccessToken(ctx context.Context, db Database, userId string) error {
 	operation := "DeprecateLatestAccessToken"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
@@ -74,14 +74,14 @@ func DeprecateLatestAccessToken(ctx context.Context, db *Database, userId string
 		tracer.CaptureException(dbErr)
 		return dbErr
 	}
-	db.logger.Debugf("%s updated %d rows", operation, rowsAffected)
+	db.GetLogger().Debugf("%s updated %d rows", operation, rowsAffected)
 
 	return nil
 }
 
-func CreateAccessToken(ctx context.Context, db *Database, userId, accessTokenHash string, invalidAt time.Time) error {
+func CreateAccessToken(ctx context.Context, db Database, userId, accessTokenHash string, invalidAt time.Time) error {
 	operation := "CreateAccessToken"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
@@ -101,7 +101,7 @@ func CreateAccessToken(ctx context.Context, db *Database, userId, accessTokenHas
 		tracer.CaptureException(dbErr)
 		return dbErr
 	}
-	db.logger.Debugf("%s created %d rows", operation, rowsAffected)
+	db.GetLogger().Debugf("%s created %d rows", operation, rowsAffected)
 
 	return nil
 }

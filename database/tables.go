@@ -6,24 +6,26 @@ import (
 	"emarcey/data-vault/common"
 )
 
-func ListTables(ctx context.Context, db *Database, user *common.User) ([]*common.Table, error) {
+func ListTables(ctx context.Context, db Database, user *common.User) ([]*common.Table, error) {
 	operation := "ListTables"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
 	SELECT	dt.id,
 			dt.name,
+			dt.description,
 			dt.created_by,
 			dt.updated_by
 	FROM	admin.data_tables dt
-	JOIN	admin.data_table_permissions dtp
+	LEFT JOIN	admin.data_table_permissions dtp
 		ON	dtp.table_id = dt.id
 		AND dtp.is_active
-		AND dtp.user_id = $1 or $2 = 'admin'
+		AND dtp.user_id = $1
 	WHERE	dt.is_active
+		AND (dtp.table_id IS NOT NULL OR $2 = 'admin' OR dt.created_by = $3)
 	`
-	rows, err := db.QueryContext(tracer.Context(), query, user.Id, user.Type)
+	rows, err := db.QueryContext(tracer.Context(), query, user.Id, user.Type, user.Id)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
@@ -35,7 +37,7 @@ func ListTables(ctx context.Context, db *Database, user *common.User) ([]*common
 
 	for rows.Next() {
 		var row common.Table
-		err = rows.Scan(&row.Id, &row.Name, &row.CreatedBy, &row.UpdatedBy)
+		err = rows.Scan(&row.Id, &row.Name, &row.Description, &row.CreatedBy, &row.UpdatedBy)
 		if err != nil {
 			dbErr := common.NewDatabaseError(err, operation, "Error in scan operation: %v", err)
 			tracer.CaptureException(dbErr)
@@ -52,25 +54,27 @@ func ListTables(ctx context.Context, db *Database, user *common.User) ([]*common
 	return tables, nil
 }
 
-func GetTableById(ctx context.Context, db *Database, user *common.User, tableId string) (*common.Table, error) {
+func GetTableById(ctx context.Context, db Database, user *common.User, tableId string) (*common.Table, error) {
 	operation := "GetTableById"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
 	SELECT	dt.id,
 			dt.name,
+			dt.description,
 			dt.created_by,
 			dt.updated_by
 	FROM	admin.data_tables dt
-	JOIN	admin.data_table_permissions dtp
+	LEFT JOIN	admin.data_table_permissions dtp
 		ON	dtp.table_id = dt.id
 		AND dtp.is_active
-		AND dtp.user_id = $1 or $2 = 'admin'
+		AND dtp.user_id = $1
 	WHERE	dt.is_active
-		AND dtp.id = $3
+		AND dt.id = $2
+		AND (dtp.table_id IS NOT NULL OR $3 = 'admin' OR dt.created_by = $4)
 	`
-	rows, err := db.QueryContext(tracer.Context(), query, user.Id, user.Type, tableId)
+	rows, err := db.QueryContext(tracer.Context(), query, user.Id, tableId, user.Type, user.Id)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
@@ -82,7 +86,7 @@ func GetTableById(ctx context.Context, db *Database, user *common.User, tableId 
 
 	for rows.Next() {
 		var row common.Table
-		err = rows.Scan(&row.Id, &row.Name, &row.CreatedBy, &row.UpdatedBy)
+		err = rows.Scan(&row.Id, &row.Name, &row.Description, &row.CreatedBy, &row.UpdatedBy)
 		if err != nil {
 			dbErr := common.NewDatabaseError(err, operation, "Error in scan operation: %v", err)
 			tracer.CaptureException(dbErr)
@@ -102,23 +106,18 @@ func GetTableById(ctx context.Context, db *Database, user *common.User, tableId 
 	return table, nil
 }
 
-func DeleteTable(ctx context.Context, db *Database, user *common.User, tableId string) error {
+func DeleteTable(ctx context.Context, db Database, user *common.User, tableId string) error {
 	operation := "DeleteTable"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
-	UPDATE	admin.data_tables dt
-	SET		is_active = False,
-			updated_by = $1
-	FROM	admin.data_table_permissions dtp
-	WHERE	dtp.table_id = dt.id
-		AND dtp.is_active
-		AND dtp.user_id = $2 or $3 = 'admin'
-		AND	dt.is_active
-		AND dtp.id = $4
-	`
-	result, err := db.ExecContext(tracer.Context(), query, user.Id, user.Id, user.Type, tableId)
+		UPDATE	admin.data_tables dt
+		SET		is_active = false,
+				updated_by = $1
+		WHERE dt.id = $2
+		`
+	result, err := db.ExecContext(tracer.Context(), query, user.Id, tableId)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
@@ -131,62 +130,47 @@ func DeleteTable(ctx context.Context, db *Database, user *common.User, tableId s
 		tracer.CaptureException(dbErr)
 		return dbErr
 	}
-	db.logger.Debugf("%s soft deleted %d rows", operation, rowsAffected)
+	db.GetLogger().Debugf("%s soft deleted %d rows", operation, rowsAffected)
 	return nil
 }
 
-// func DeleteTable(ctx context.Context, db *Database, tableName, userId string) error {
-// 	operation := "DeleteTable"
-// 	tracer := db.tracerCreator(ctx, operation)
-// 	defer tracer.Close()
+func CreateTable(ctx context.Context, db Database, user *common.User, tableName, tableDescription string) (*common.Table, error) {
+	operation := "CreateTable"
+	tracer := db.CreateTrace(ctx, operation)
+	defer tracer.Close()
 
-// 	query := `
-// 	UPDATE  admin.data_tables
-// 	SET is_active = false,
-// 		updated_by = $1
-// 	WHERE	id = $2
-// 	`
-// 	result, err := db.ExecContext(tracer.Context(), query, tableName, userId)
-// 	if err != nil {
-// 		dbErr := common.NewDatabaseError(err, operation, "")
-// 		tracer.CaptureException(dbErr)
-// 		return dbErr
-// 	}
+	query := `
+	INSERT INTO  admin.data_tables (name, description, is_active, created_by, updated_by)
+	VALUES($1, $2, $3, $4, $5)
+	RETURNING id, name, description, created_by, updated_by
+	`
+	rows, err := db.QueryContext(tracer.Context(), query, tableName, tableDescription, true, user.Id, user.Id)
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "")
+		tracer.CaptureException(dbErr)
+		return nil, dbErr
+	}
 
-// 	rowsAffected, err := result.RowsAffected()
-// 	if err != nil {
-// 		dbErr := common.NewDatabaseError(err, operation, "")
-// 		tracer.CaptureException(dbErr)
-// 		return dbErr
-// 	}
-// 	db.logger.Debugf("%s updated %d rows", operation, rowsAffected)
+	var table *common.Table
 
-// 	return nil
-// }
-
-// func CreateTable(ctx context.Context, db *Database, userId, userName, userType, userSecretHash string) error {
-// 	operation := "CreateTable"
-// 	tracer := db.tracerCreator(ctx, operation)
-// 	defer tracer.Close()
-
-// 	query := `
-// 	INSERT INTO  admin.users (id, name, is_active, type, client_secret_hash)
-// 	VALUES($1, $2, $3, $4, $5)
-// 	`
-// 	result, err := db.ExecContext(tracer.Context(), query, userId, userName, true, userType, userSecretHash)
-// 	if err != nil {
-// 		dbErr := common.NewDatabaseError(err, operation, "")
-// 		tracer.CaptureException(dbErr)
-// 		return dbErr
-// 	}
-
-// 	rowsAffected, err := result.RowsAffected()
-// 	if err != nil {
-// 		dbErr := common.NewDatabaseError(err, operation, "")
-// 		tracer.CaptureException(dbErr)
-// 		return dbErr
-// 	}
-// 	db.logger.Debugf("%s created %d rows", operation, rowsAffected)
-
-// 	return nil
-// }
+	for rows.Next() {
+		var row common.Table
+		err = rows.Scan(&row.Id, &row.Name, &row.Description, &row.CreatedBy, &row.UpdatedBy)
+		if err != nil {
+			dbErr := common.NewDatabaseError(err, operation, "Error in scan operation: %v", err)
+			tracer.CaptureException(dbErr)
+			return nil, dbErr
+		}
+		table = &row
+	}
+	err = rows.Err()
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "Error in rows.Err() operation: %v", err)
+		tracer.CaptureException(dbErr)
+		return nil, dbErr
+	}
+	if table == nil {
+		return nil, common.NewResourceNotFoundError(operation, "name", tableName)
+	}
+	return table, nil
+}

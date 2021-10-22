@@ -35,7 +35,7 @@ type Dependencies struct {
 	Logger         *logrus.Logger
 	Tracer         tracer.TracerCreator
 	SecretsManager secrets.SecretsManager
-	Database       *database.Database
+	Database       *database.DatabaseEngine
 	AuthUsers      map[string]*common.User
 	AccessTokens   map[string]*common.AccessToken
 	ServerConfigs  *ServerConfigs

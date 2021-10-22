@@ -34,7 +34,7 @@ CREATE TABLE admin.users (
     type TEXT REFERENCES admin.user_type(id)
 );
 
-COMMENT ON TABLE admin.users IS 'Users stores information about each user, including their client_id & a hash of the secret used to generate an access token.';
+COMMENT ON TABLE admin.users IS 'Users stores information about each user, including their user_id & a hash of the secret used to generate an access token.';
 COMMENT ON COLUMN admin.users.client_secret_hash IS 'A hash of the unique client secret generated for this user. Of the form "{encryptionMethod}|||{encryptedValue}"';
 
 CREATE UNIQUE INDEX uq__admin__users__name ON admin.users(name) WHERE is_active;
@@ -70,6 +70,7 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 CREATE TABLE admin.data_tables (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
+    description TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     created_by UUID REFERENCES admin.users(id) NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
@@ -79,6 +80,15 @@ CREATE TABLE admin.data_tables (
 
 COMMENT ON TABLE admin.data_tables IS 'Data tables stores all user created tables for data being stored. Kept separate from information schema so we can log who did what.';
 CREATE UNIQUE INDEX uq__admin__data_tables__name ON admin.data_tables(name) WHERE is_active;
+
+CREATE TABLE admin.data_columns (
+    column_name TEXT NOT NULL,
+    table_id UUID NOT NULL REFERENCES admin.data_tables(id),
+    data_type TEXT NOT NULL,
+    PRIMARY KEY(column_name, table_id)
+);
+
+COMMENT ON TABLE admin.data_columns IS 'Data columns stores columns for all user created tables for data being stored.';
 
 CREATE TRIGGER set_admin__data_tables_timestamp
     BEFORE UPDATE ON admin.data_tables

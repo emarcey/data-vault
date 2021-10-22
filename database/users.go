@@ -6,9 +6,9 @@ import (
 	"emarcey/data-vault/common"
 )
 
-func SelectUsersForAuth(ctx context.Context, db *Database) (map[string]*common.User, error) {
+func SelectUsersForAuth(ctx context.Context, db Database) (map[string]*common.User, error) {
 	operation := "SelectUsersForAuth"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
@@ -49,9 +49,9 @@ func SelectUsersForAuth(ctx context.Context, db *Database) (map[string]*common.U
 	return userMap, nil
 }
 
-func ListUsers(ctx context.Context, db *Database) ([]*common.User, error) {
+func ListUsers(ctx context.Context, db Database) ([]*common.User, error) {
 	operation := "ListUsers"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
@@ -91,9 +91,9 @@ func ListUsers(ctx context.Context, db *Database) ([]*common.User, error) {
 	return users, nil
 }
 
-func GetUserById(ctx context.Context, db *Database, userId string) (*common.User, error) {
+func GetUserById(ctx context.Context, db Database, userId string) (*common.User, error) {
 	operation := "GetUserById"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
@@ -137,9 +137,9 @@ func GetUserById(ctx context.Context, db *Database, userId string) (*common.User
 	return user, nil
 }
 
-func DeleteUser(ctx context.Context, db *Database, userId string) error {
+func DeleteUser(ctx context.Context, db Database, userId string) error {
 	operation := "DeleteUser"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
@@ -160,14 +160,14 @@ func DeleteUser(ctx context.Context, db *Database, userId string) error {
 		tracer.CaptureException(dbErr)
 		return dbErr
 	}
-	db.logger.Debugf("%s soft deleted %d rows", operation, rowsAffected)
+	db.GetLogger().Debugf("%s soft deleted %d rows", operation, rowsAffected)
 
 	return nil
 }
 
-func CreateUser(ctx context.Context, db *Database, userId, userName, userType, userSecretHash string) error {
+func CreateUser(ctx context.Context, db Database, userId, userName, userType, userSecretHash string) error {
 	operation := "CreateUser"
-	tracer := db.tracerCreator(ctx, operation)
+	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
@@ -187,7 +187,7 @@ func CreateUser(ctx context.Context, db *Database, userId, userName, userType, u
 		tracer.CaptureException(dbErr)
 		return dbErr
 	}
-	db.logger.Debugf("%s created %d rows", operation, rowsAffected)
+	db.GetLogger().Debugf("%s created %d rows", operation, rowsAffected)
 
 	return nil
 }

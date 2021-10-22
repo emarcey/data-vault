@@ -8,12 +8,12 @@ import (
 
 type EndpointHandler func(e endpoint.Endpoint, op string, deps *dependencies.Dependencies) endpoint.Endpoint
 
-// HandleAdminEndpoints -- wrapper to add logging/tracing/auth for client_id/secret admin endpoints
+// HandleAdminEndpoints -- wrapper to add logging/tracing/auth for user_id/secret admin endpoints
 func HandleAdminEndpoints(e endpoint.Endpoint, op string, deps *dependencies.Dependencies) endpoint.Endpoint {
 	return EndpointLoggingWrapper(EndpointTracingWrapper(EndpointClientAuthenticationWrapper(e, op, deps, true), op, deps), op, deps)
 }
 
-// HandleClientEndpoints -- wrapper to add logging/tracing/auth for client_id/secret endpoints
+// HandleClientEndpoints -- wrapper to add logging/tracing/auth for user_id/secret endpoints
 func HandleClientEndpoints(e endpoint.Endpoint, op string, deps *dependencies.Dependencies) endpoint.Endpoint {
 	return EndpointLoggingWrapper(EndpointTracingWrapper(EndpointClientAuthenticationWrapper(e, op, deps, false), op, deps), op, deps)
 }

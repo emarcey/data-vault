@@ -1,6 +1,7 @@
 package common
 
 import (
+	// "encoding/json"
 	"fmt"
 
 	"github.com/lib/pq"
@@ -69,6 +70,8 @@ func NewDatabaseError(originalErr error, operation, message string, messageArgs 
 	pqErr, ok := originalErr.(*pq.Error)
 	if ok && pqErr != nil {
 		// not exhaustive, adding as I find potential errors I want to clean up
+		// b, _ := json.Marshal(pqErr)
+		// fmt.Printf("error: %v\n", string(b))
 		switch pqErr.Code {
 		case "23505":
 			return NewResourceAlreadyExistsError(operation, pqErr.Detail)

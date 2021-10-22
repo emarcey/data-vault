@@ -3,12 +3,14 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 
+	"emarcey/data-vault/common"
 	"emarcey/data-vault/dependencies"
 	"emarcey/data-vault/server/handlers"
 )
@@ -23,7 +25,7 @@ type endpointBuilder struct {
 func makeMethods(r *mux.Router, deps *dependencies.Dependencies, handler handlers.EndpointHandler, endpoints []endpointBuilder, encoder httptransport.EncodeResponseFunc, options ...httptransport.ServerOption) {
 	for _, endpoint := range endpoints {
 		r.Methods(endpoint.method).Path(endpoint.path).Handler(httptransport.NewServer(
-			handler(endpoint.endpoint, endpoint.path, deps),
+			handler(endpoint.endpoint, fmt.Sprintf("%s %s", endpoint.method, endpoint.path), deps),
 			endpoint.decoder,
 			encoder,
 			options...,
@@ -47,6 +49,11 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		getUserEndpoint(s),
 		deleteUserEndpoint(s),
 		createUserEndpoint(s),
+		deleteTableEndpoint(s),
+		listTablePermissionsForUserEndpoint(s),
+		listTablePermissionsForTableEndpoint(s),
+		deleteTablePermissionEndpoint(s),
+		createTablePermissionEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleAdminEndpoints, adminEndpoints, encodeResponse, options...)
 
@@ -57,6 +64,9 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 
 	accessTokenEndpoints := []endpointBuilder{
 		listTablesEndpoint(s),
+		getTableEndpoint(s),
+		createTableEndpoint(s),
+		listTablePermissionsEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleTokenEndpoints, accessTokenEndpoints, encodeResponse, options...)
 	return r
@@ -64,6 +74,17 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 
 func noOpDecodeRequest(_ context.Context, _ *http.Request) (interface{}, error) {
 	return nil, nil
+}
+
+func decodeRequestUrlId(op string) httptransport.DecodeRequestFunc {
+	return func(_ context.Context, r *http.Request) (interface{}, error) {
+		vars := mux.Vars(r)
+		id, ok := vars["id"]
+		if !ok {
+			return nil, common.NewInvalidParamsError(op, "Id not found")
+		}
+		return id, nil
+	}
 }
 
 // encodeResponse is the common method to encode all response types to the
