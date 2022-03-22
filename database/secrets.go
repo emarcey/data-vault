@@ -43,15 +43,14 @@ func GetSecretByName(ctx context.Context, db Database, userId string) (*common.S
 			s.value,
 			s.description,
 			created_by_user.name AS created_by,
-			updated_by_user.name AS updated_by,
-			s.is_active
+			updated_by_user.name AS updated_by
 	FROM	admin.secrets s
 	JOIN	admin.users created_by_user
-		ON 	s.created_by = created_by_user
+		ON 	s.created_by = created_by_user.id
 		JOIN	admin.users updated_by_user
-		ON 	s.updated_by = updated_by_user
-	WHERE	name = $1
-		AND u.is_active
+		ON 	s.updated_by = updated_by_user.id
+	WHERE	s.name = $1
+		AND s.is_active
 	`
 	rows, err := db.QueryContext(tracer.Context(), query, userId)
 	if err != nil {

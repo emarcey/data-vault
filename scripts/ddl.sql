@@ -84,5 +84,7 @@ CREATE TRIGGER set_admin__secrets_timestamp
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
-COMMENT ON TABLE admin.data_tables IS 'secrets stores all user created secrets for data being stored. Kept separate from information schema so we can log who did what.';
+COMMENT ON TABLE admin.secrets IS 'secrets stores all user created secrets for data being stored. Kept separate from information schema so we can log who did what.';
 CREATE UNIQUE INDEX uq__admin__secrets__name ON admin.secrets(name) WHERE is_active;
+
+COMMIT;

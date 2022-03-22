@@ -118,7 +118,7 @@ func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequ
 		return nil, err
 	}
 	secretId := common.GenUuid()
-	ciphertext, encryptedSecret, err := common.EncryptSecret(secretId, createArgs.Name, common.KEY_SIZE)
+	ciphertext, encryptedSecret, err := common.EncryptSecret(secretId, createArgs.Value, common.KEY_SIZE)
 	if err != nil {
 		return nil, err
 	}
@@ -133,13 +133,16 @@ func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequ
 		Value:       ciphertext,
 		Name:        createArgs.Name,
 		Description: createArgs.Description,
-		CreatedBy:   user.Name,
-		UpdatedBy:   user.Name,
+		CreatedBy:   user.Id,
+		UpdatedBy:   user.Id,
 	}
 	err = database.CreateSecret(ctx, s.deps.Database, secret)
 	if err != nil {
 		return nil, err
 	}
+	secret.Value = createArgs.Value
+	secret.CreatedBy = user.Name
+	secret.UpdatedBy = user.Name
 	return secret, nil
 }
 
