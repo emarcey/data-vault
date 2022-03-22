@@ -10,18 +10,8 @@ type CreateUserResponse struct {
 	UserSecret string `json:"user_secret"`
 }
 
-type CreateTableRequest struct {
+type CreateSecretRequest struct {
 	Name        string `json:"name"`
+	Value       string `json:"value"`
 	Description string `json:"description"`
-}
-
-type DeleteTablePermissionRequest struct {
-	UserId  string `json:"user_id"`
-	TableId string `json:"table_id"`
-}
-
-type CreateTablePermissionRequest struct {
-	UserId           string `json:"user_id"`
-	TableId          string `json:"table_id"`
-	IsDecryptAllowed bool   `json:"is_decrypt_allowed"`
 }

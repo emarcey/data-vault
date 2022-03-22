@@ -19,17 +19,11 @@ type Service interface {
 	DeleteUser(ctx context.Context, id string) error
 	GetAccessToken(ctx context.Context, user *common.User) (*common.AccessToken, error)
 
-	// tables
-	ListTables(ctx context.Context, user *common.User) ([]*common.Table, error)
-	GetTable(ctx context.Context, user *common.User, tableId string) (*common.Table, error)
-	DeleteTable(ctx context.Context, user *common.User, tableId string) error
-	CreateTable(ctx context.Context, user *common.User, req *CreateTableRequest) (*common.Table, error)
-
-	// table permissions
-	ListTablePermissions(ctx context.Context, userId string) ([]*common.TablePermission, error)
-	ListTablePermissionsForTable(ctx context.Context, tableId string) ([]*common.TablePermission, error)
-	DeleteTablePermission(ctx context.Context, adminUser *common.User, req *DeleteTablePermissionRequest) error
-	CreateTablePermission(ctx context.Context, adminUser *common.User, req *CreateTablePermissionRequest) (*common.TablePermission, error)
+	// keys
+	CreateSecret(ctx context.Context, key *CreateSecretRequest) (*common.Secret, error)
+	// FetchKey(ctx context.Context, user *common.User, keyName string) (*common.Key, error)
+	// UpdateKey(ctx context.Context, user *common.User, key *CreateSecretArgs) (*common.Key, error)
+	// DeleteKey(ctx context.Context, user *common.User, keyName string) (*common.Key, error)
 }
 
 type service struct {
@@ -118,38 +112,33 @@ func (s *service) GetAccessToken(ctx context.Context, user *common.User) (*commo
 	}, nil
 }
 
-func (s *service) ListTables(ctx context.Context, user *common.User) ([]*common.Table, error) {
-	return database.ListTables(ctx, s.deps.Database, user)
-}
-
-func (s *service) GetTable(ctx context.Context, user *common.User, tableId string) (*common.Table, error) {
-	return database.GetTableById(ctx, s.deps.Database, user, tableId)
-}
-
-func (s *service) DeleteTable(ctx context.Context, user *common.User, tableId string) error {
-	return database.DeleteTable(ctx, s.deps.Database, user, tableId)
-}
-
-func (s *service) CreateTable(ctx context.Context, user *common.User, req *CreateTableRequest) (*common.Table, error) {
-	tx, err := s.deps.Database.StartTransaction(ctx)
+func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequest) (*common.Secret, error) {
+	user, err := common.FetchUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return database.CreateTable(ctx, tx, user, req.Name, req.Description)
-}
+	secretId := common.GenUuid()
+	ciphertext, encryptedSecret, err := common.EncryptSecret(secretId, createArgs.Name, common.KEY_SIZE)
+	if err != nil {
+		return nil, err
+	}
 
-func (s *service) ListTablePermissions(ctx context.Context, userId string) ([]*common.TablePermission, error) {
-	return database.ListTablePermissions(ctx, s.deps.Database, userId)
-}
+	err = s.deps.SecretsManager.CreateSecret(ctx, encryptedSecret)
+	if err != nil {
+		return nil, err
+	}
 
-func (s *service) ListTablePermissionsForTable(ctx context.Context, tableId string) ([]*common.TablePermission, error) {
-	return database.ListTablePermissionsForTable(ctx, s.deps.Database, tableId)
-}
-
-func (s *service) DeleteTablePermission(ctx context.Context, adminUser *common.User, req *DeleteTablePermissionRequest) error {
-	return database.DeleteTablePermission(ctx, s.deps.Database, adminUser, req.UserId, req.TableId)
-}
-
-func (s *service) CreateTablePermission(ctx context.Context, adminUser *common.User, req *CreateTablePermissionRequest) (*common.TablePermission, error) {
-	return database.CreateTablePermission(ctx, s.deps.Database, adminUser, req.UserId, req.TableId, req.IsDecryptAllowed)
+	secret := &common.Secret{
+		Id:          secretId,
+		Value:       ciphertext,
+		Name:        createArgs.Name,
+		Description: createArgs.Description,
+		CreatedBy:   user.Id,
+		UpdatedBy:   user.Id,
+	}
+	err = database.CreateSecret(ctx, s.deps.Database, secret)
+	if err != nil {
+		return nil, err
+	}
+	return secret, nil
 }

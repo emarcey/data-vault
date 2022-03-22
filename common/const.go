@@ -20,3 +20,5 @@ var SUPPORTED_DATA_TYPES = map[string]bool{
 	"decimal":     true,
 	"numeric":     true,
 }
+
+const KEY_SIZE = 32

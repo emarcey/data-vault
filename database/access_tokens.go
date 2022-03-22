@@ -75,7 +75,6 @@ func DeprecateLatestAccessToken(ctx context.Context, db Database, userId string)
 		return dbErr
 	}
 	db.GetLogger().Debugf("%s updated %d rows", operation, rowsAffected)
-
 	return nil
 }
 

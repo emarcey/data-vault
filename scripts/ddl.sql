@@ -67,83 +67,22 @@ CREATE TRIGGER set_admin__access_tokens_timestamp
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 
-CREATE TABLE admin.data_tables (
+CREATE TABLE admin.secrets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
+    value TEXT NOT NULL,
     description TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     created_by UUID REFERENCES admin.users(id) NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_by UUID REFERENCES admin.users(id) NOT NULL,
-    is_active BOOLEAN NOT NULL
+    is_active BOOLEAN NOT NULL DEFAULT true
 );
 
-COMMENT ON TABLE admin.data_tables IS 'Data tables stores all user created tables for data being stored. Kept separate from information schema so we can log who did what.';
-CREATE UNIQUE INDEX uq__admin__data_tables__name ON admin.data_tables(name) WHERE is_active;
-
-CREATE TABLE admin.data_columns (
-    column_name TEXT NOT NULL,
-    table_id UUID NOT NULL REFERENCES admin.data_tables(id),
-    data_type TEXT NOT NULL,
-    PRIMARY KEY(column_name, table_id)
-);
-
-COMMENT ON TABLE admin.data_columns IS 'Data columns stores columns for all user created tables for data being stored.';
-
-CREATE TRIGGER set_admin__data_tables_timestamp
-    BEFORE UPDATE ON admin.data_tables
+CREATE TRIGGER set_admin__secrets_timestamp
+    BEFORE UPDATE ON admin.secrets
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
-CREATE TABLE admin.data_table_permissions (
-    user_id UUID REFERENCES admin.users(id) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    table_id UUID NOT NULL REFERENCES admin.data_tables(id),
-    is_decrypt_allowed BOOLEAN NOT NULL DEFAULT false,
-    created_by UUID REFERENCES admin.users(id) NOT NULL,
-    updated_by UUID REFERENCES admin.users(id) NOT NULL,
-    is_active BOOLEAN NOT NULL,
-    PRIMARY KEY (user_id, table_id)
-);
-
-COMMENT ON TABLE admin.data_table_permissions IS 'Table permissions grants access for a user to query a given table. Access should only be granted by an admin';
-COMMENT ON COLUMN admin.data_table_permissions.is_decrypt_allowed IS 'If true, user is allowed to decrypt results of query. If false, user can only get metadata';
-
-CREATE TRIGGER set_admin__data_table_permissions_timestamp
-    BEFORE UPDATE ON admin.data_table_permissions
-    FOR EACH ROW
-EXECUTE PROCEDURE trigger_set_timestamp();
-
-
-CREATE TABLE admin.encrypted_keys (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    table_id UUID NOT NULL REFERENCES admin.data_tables(id),
-    row_id UUID NOT NULL,
-    column_name TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    hash_value TEXT NOT NULL
-);
-
-CREATE INDEX idx__admin__encrypted_keys__hash_value ON admin.encrypted_keys(hash_value);
-CREATE UNIQUE INDEX uq__admin__encrypted_keys__table_row_column ON admin.encrypted_keys(table_id, row_id, column_name);
-
-CREATE TABLE admin.encrypted_key_metadata_type (
-    id TEXT NOT NULL PRIMARY KEY,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
-);
-
-CREATE TABLE admin.encrypted_key_metadata (
-    encrypted_key_id UUID REFERENCES admin.encrypted_keys(id) NOT NULL,
-    encrypted_key_metadata_type_id TEXT REFERENCES admin.encrypted_key_metadata_type(id) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    value TEXT NOT NULL,
-    PRIMARY KEY (encrypted_key_id, encrypted_key_metadata_type_id)
-);
-
-
---raw secret: 9e5d5da6-24ed-42a9-a105-c531bed8175d
-INSERT INTO admin.users (id, name, client_secret_hash, type) VALUES ('03b6f72c-f3f4-43d9-a705-17b326924d74', 'admin', 'sha256:9dbcc64bd8006081f719719f9be420059b907429710bc64215c843596c6d0d64', 'admin');
-
-COMMIT;
+COMMENT ON TABLE admin.data_tables IS 'secrets stores all user created secrets for data being stored. Kept separate from information schema so we can log who did what.';
+CREATE UNIQUE INDEX uq__admin__secrets__name ON admin.secrets(name) WHERE is_active;

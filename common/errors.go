@@ -46,8 +46,12 @@ func NewMongoError(method, message string) SecretsError {
 	return SecretsError{secretsManagerType: "mongodb", method: method, message: message}
 }
 
-func NewMongoGetOrPutSecretError(message string, messageArgs ...interface{}) SecretsError {
-	return SecretsError{secretsManagerType: "mongodb", method: "GetOrPutSecret", message: message, messageArgs: messageArgs}
+func NewMongoGetSecretError(message string, messageArgs ...interface{}) SecretsError {
+	return SecretsError{secretsManagerType: "mongodb", method: "GetSecret", message: message, messageArgs: messageArgs}
+}
+
+func NewMongoCreateSecretError(message string, messageArgs ...interface{}) SecretsError {
+	return SecretsError{secretsManagerType: "mongodb", method: "CreateSecret", message: message, messageArgs: messageArgs}
 }
 
 type DatabaseError struct {
@@ -155,4 +159,26 @@ func (e ResourceNotFoundError) Code() int {
 
 func NewResourceNotFoundError(operation, field, value string) ResourceNotFoundError {
 	return ResourceNotFoundError{operation: operation, field: field, value: value}
+}
+
+type InternalServerError struct {
+	functionName string
+	message      string
+	messageArgs  []interface{}
+}
+
+func (e InternalServerError) Error() string {
+	return fmt.Sprintf("Error invalid params at %s: ", e.functionName) + fmt.Sprintf(e.message, e.messageArgs...)
+}
+
+func (e InternalServerError) Code() int {
+	return 400
+}
+
+func NewInternalServerError(functionName string, message string, messageArgs ...interface{}) InternalServerError {
+	return InternalServerError{functionName: functionName, message: message, messageArgs: messageArgs}
+}
+
+func NewInternalServerErrorFromError(functionName string, err error) InternalServerError {
+	return InternalServerError{functionName: functionName, message: err.Error(), messageArgs: nil}
 }

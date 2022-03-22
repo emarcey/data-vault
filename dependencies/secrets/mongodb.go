@@ -37,32 +37,30 @@ func (s *MongoSecretsManager) reconnect(ctx context.Context) error {
 	return nil
 }
 
-func (s *MongoSecretsManager) GetOrPutSecret(ctx context.Context, secret *Secret) (*Secret, error) {
-	result := s.collection.FindOne(ctx, bson.M{"_id": secret.Id})
+func (s *MongoSecretsManager) GetSecret(ctx context.Context, secretId string) (*common.EncryptedSecret, error) {
+	result := s.collection.FindOne(ctx, bson.M{"_id": secretId})
 	if result == nil {
-		return nil, common.NewMongoGetOrPutSecretError("FindOne for secret %s returned nil.", secret.Id)
+		return nil, common.NewMongoGetSecretError("FindOne for secret %s returned nil.", secretId)
 	}
 	err := result.Err()
 	if err != nil {
-		if err.Error() != mongo.ErrNoDocuments.Error() {
-			return nil, common.NewMongoGetOrPutSecretError("FindOne for secret %s returned error: %v.", secret.Id, err)
-		}
-		result, err := s.collection.InsertOne(ctx, secret)
-		if err != nil {
-			return nil, common.NewMongoGetOrPutSecretError("Error inserting secret, %s, received error, %v", secret.Id, err)
-		}
-		if result == nil {
-			return nil, common.NewMongoGetOrPutSecretError("Nil result inserting secret, %s", secret.Id)
-		}
-		return secret, nil
+		return nil, err
 	}
 
-	var val Secret
+	var val common.EncryptedSecret
 	err = result.Decode(&val)
 	if err != nil {
-		return nil, common.NewMongoGetOrPutSecretError("Decode for secret %s, with raw value %v, returned error: %v.", secret.Id, result, err)
+		return nil, common.NewMongoGetSecretError("Decode for secret %s, with raw value %v, returned error: %v.", secretId, result, err)
 	}
 	return &val, nil
+}
+
+func (s *MongoSecretsManager) CreateSecret(ctx context.Context, secret *common.EncryptedSecret) error {
+	_, err := s.collection.InsertOne(ctx, secret)
+	if err != nil {
+		return common.NewMongoCreateSecretError("Error inserting secret, %s, received error, %v", secret.Id, err)
+	}
+	return nil
 }
 
 func (s *MongoSecretsManager) Close(ctx context.Context) {

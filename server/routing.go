@@ -49,11 +49,6 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		getUserEndpoint(s),
 		deleteUserEndpoint(s),
 		createUserEndpoint(s),
-		deleteTableEndpoint(s),
-		listTablePermissionsForUserEndpoint(s),
-		listTablePermissionsForTableEndpoint(s),
-		deleteTablePermissionEndpoint(s),
-		createTablePermissionEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleAdminEndpoints, adminEndpoints, encodeResponse, options...)
 
@@ -63,10 +58,7 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 	makeMethods(r, deps, handlers.HandleClientEndpoints, clientEndpoints, encodeResponse, options...)
 
 	accessTokenEndpoints := []endpointBuilder{
-		listTablesEndpoint(s),
-		getTableEndpoint(s),
-		createTableEndpoint(s),
-		listTablePermissionsEndpoint(s),
+		createSecretEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleTokenEndpoints, accessTokenEndpoints, encodeResponse, options...)
 	return r

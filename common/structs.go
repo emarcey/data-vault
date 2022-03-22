@@ -19,25 +19,17 @@ type AccessToken struct {
 	IsLatest  bool      `json:"is_latest"`
 }
 
-type Table struct {
+type Secret struct {
 	Id          string `json:"id"`
 	Name        string `json:"name"`
+	Value       string `json:"value"`
 	Description string `json:"description"`
 	CreatedBy   string `json:"created_by"`
 	UpdatedBy   string `json:"updated_by"`
 }
 
-type Column struct {
-	TableId    string `json:"table_id"`
-	ColumnName string `json:"column_name"`
-	DataType   string `json:"data_type"`
-}
-
-type TablePermission struct {
-	UserId           string `json:"client_id"`
-	TableId          string `json:"table_id"`
-	TableName        string `json:"table_name"`
-	IsDecryptAllowed bool   `json:"is_decrypt_allowed"`
-	CreatedBy        string `json:"created_by"`
-	UpdatedBy        string `json:"updated_by"`
+type EncryptedSecret struct {
+	Id  string `json:"_id" bson:"_id"`
+	Key string `json:"key" bson:"key"`
+	Iv  string `json:"iv" bson:"iv"`
 }
