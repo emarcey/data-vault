@@ -21,7 +21,7 @@ type Service interface {
 
 	// keys
 	CreateSecret(ctx context.Context, key *CreateSecretRequest) (*common.Secret, error)
-	// FetchKey(ctx context.Context, user *common.User, keyName string) (*common.Key, error)
+	GetSecret(ctx context.Context, secretName string) (*common.Secret, error)
 	// UpdateKey(ctx context.Context, user *common.User, key *CreateSecretArgs) (*common.Key, error)
 	// DeleteKey(ctx context.Context, user *common.User, keyName string) (*common.Key, error)
 }
@@ -133,12 +133,32 @@ func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequ
 		Value:       ciphertext,
 		Name:        createArgs.Name,
 		Description: createArgs.Description,
-		CreatedBy:   user.Id,
-		UpdatedBy:   user.Id,
+		CreatedBy:   user.Name,
+		UpdatedBy:   user.Name,
 	}
 	err = database.CreateSecret(ctx, s.deps.Database, secret)
 	if err != nil {
 		return nil, err
 	}
 	return secret, nil
+}
+
+func (s *service) GetSecret(ctx context.Context, secretName string) (*common.Secret, error) {
+	dbSecret, err := database.GetSecretByName(ctx, s.deps.Database, secretName)
+	if err != nil {
+		return nil, err
+	}
+
+	encryptedSecret, err := s.deps.SecretsManager.GetSecret(ctx, dbSecret.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	plaintext, err := common.DecryptSecret(dbSecret.Value, encryptedSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	dbSecret.Value = plaintext
+	return dbSecret, nil
 }

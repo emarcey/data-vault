@@ -38,3 +38,20 @@ func createSecretEndpoint(s Service) endpointBuilder {
 		path:     "/secrets",
 	}
 }
+
+func getSecretEndpoint(s Service) endpointBuilder {
+	op := "GetSecret"
+	e := func(ctx context.Context, secretNameInterface interface{}) (interface{}, error) {
+		secretName, ok := secretNameInterface.(string)
+		if !ok {
+			return nil, common.NewInvalidParamsError(op, "Expected user ID of type string. Got %T", secretNameInterface)
+		}
+		return s.GetSecret(ctx, secretName)
+	}
+	return endpointBuilder{
+		endpoint: e,
+		decoder:  decodeRequestUrlName(op),
+		method:   "GET",
+		path:     "/secrets/{name}",
+	}
+}

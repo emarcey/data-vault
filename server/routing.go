@@ -59,6 +59,7 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 
 	accessTokenEndpoints := []endpointBuilder{
 		createSecretEndpoint(s),
+		getSecretEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleTokenEndpoints, accessTokenEndpoints, encodeResponse, options...)
 	return r
@@ -74,6 +75,17 @@ func decodeRequestUrlId(op string) httptransport.DecodeRequestFunc {
 		id, ok := vars["id"]
 		if !ok {
 			return nil, common.NewInvalidParamsError(op, "Id not found")
+		}
+		return id, nil
+	}
+}
+
+func decodeRequestUrlName(op string) httptransport.DecodeRequestFunc {
+	return func(_ context.Context, r *http.Request) (interface{}, error) {
+		vars := mux.Vars(r)
+		id, ok := vars["name"]
+		if !ok {
+			return nil, common.NewInvalidParamsError(op, "Name not found")
 		}
 		return id, nil
 	}
