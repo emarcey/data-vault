@@ -122,6 +122,10 @@ func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequ
 	if err != nil {
 		return nil, err
 	}
+	err = s.deps.SecretsManager.LogAccess(ctx, common.NewAccessLog(user.Id, "CreateSecret", createArgs.Name))
+	if err != nil {
+		return nil, err
+	}
 	secretId := common.GenUuid()
 	ciphertext, encryptedSecret, err := common.EncryptSecret(secretId, createArgs.Value, common.KEY_SIZE)
 	if err != nil {
@@ -153,6 +157,15 @@ func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequ
 }
 
 func (s *service) GetSecret(ctx context.Context, secretName string) (*common.Secret, error) {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = s.deps.SecretsManager.LogAccess(ctx, common.NewAccessLog(user.Id, "GetSecret", secretName))
+	if err != nil {
+		return nil, err
+	}
+
 	dbSecret, err := database.GetSecretByName(ctx, s.deps.Database, secretName)
 	if err != nil {
 		return nil, err
@@ -177,10 +190,14 @@ func (s *service) DeleteSecret(ctx context.Context, secretName string) error {
 	if err != nil {
 		return err
 	}
+	err = s.deps.SecretsManager.LogAccess(ctx, common.NewAccessLog(user.Id, "DeleteSecret", secretName))
+	if err != nil {
+		return err
+	}
+
 	err = database.DeleteSecret(ctx, s.deps.Database, user.Id, secretName)
 	if err != nil {
 		return err
 	}
 	return nil
-
 }

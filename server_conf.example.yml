@@ -13,7 +13,8 @@ secretsManagerOpts:
     dbPassword:
     clusterName:
     databaseName:
-    collectionName:
+    secretsCollectionName:
+    logCollectionName:
 databaseOpts:
   driver:
   username:

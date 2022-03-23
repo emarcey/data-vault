@@ -42,16 +42,12 @@ func (e SecretsError) Code() int {
 	return 500
 }
 
-func NewMongoError(method, message string) SecretsError {
-	return SecretsError{secretsManagerType: "mongodb", method: method, message: message}
+func NewMongoError(method, message string, messageArgs ...interface{}) SecretsError {
+	return SecretsError{secretsManagerType: "mongodb", method: method, message: message, messageArgs: messageArgs}
 }
 
 func NewMongoGetSecretError(message string, messageArgs ...interface{}) SecretsError {
 	return SecretsError{secretsManagerType: "mongodb", method: "GetSecret", message: message, messageArgs: messageArgs}
-}
-
-func NewMongoCreateSecretError(message string, messageArgs ...interface{}) SecretsError {
-	return SecretsError{secretsManagerType: "mongodb", method: "CreateSecret", message: message, messageArgs: messageArgs}
 }
 
 type DatabaseError struct {

@@ -2,6 +2,8 @@ package common
 
 import (
 	"time"
+
+	bsonPrimitive "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Responser interface {
@@ -63,8 +65,17 @@ type EncryptedSecret struct {
 }
 
 type AccessLog struct {
-	UserId     string `json:"user_id" bson"user_id"`
-	ActionType string `json:"action_type" bson:"action_type"`
-	KeyName    string `json:"key_name" bson:"key_name"`
-	AccessAt   string `json:"access_at" bson:"access_at"`
+	UserId     string                 `json:"user_id" bson"user_id"`
+	ActionType string                 `json:"action_type" bson:"action_type"`
+	KeyName    string                 `json:"key_name" bson:"key_name"`
+	AccessAt   bsonPrimitive.DateTime `json:"access_at" bson:"access_at"`
+}
+
+func NewAccessLog(userId, actionType, keyName string) *AccessLog {
+	return &AccessLog{
+		UserId:     userId,
+		ActionType: actionType,
+		KeyName:    keyName,
+		AccessAt:   bsonPrimitive.NewDateTimeFromTime(time.Now().UTC()),
+	}
 }

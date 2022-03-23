@@ -62,7 +62,7 @@ func (s *MongoSecretsManager) GetSecret(ctx context.Context, secretId string) (*
 func (s *MongoSecretsManager) CreateSecret(ctx context.Context, secret *common.EncryptedSecret) error {
 	_, err := s.secretsCollection.InsertOne(ctx, secret)
 	if err != nil {
-		return common.NewMongoCreateSecretError("Error inserting secret, %s, received error, %v", secret.Id, err)
+		return common.NewMongoError("CreateSecret", "Error inserting secret, %s, received error, %v", secret.Id, err)
 	}
 	return nil
 }
@@ -72,6 +72,10 @@ func (s *MongoSecretsManager) Close(ctx context.Context) {
 }
 
 func (s *MongoSecretsManager) LogAccess(ctx context.Context, log *common.AccessLog) error {
+	_, err := s.logCollection.InsertOne(ctx, log)
+	if err != nil {
+		return common.NewMongoError("LogAccess", "Error inserting log, %+v, received error, %v", log, err)
+	}
 	return nil
 }
 
