@@ -181,6 +181,7 @@ In all subsequent requests, API endpoints should be queried with the header `Acc
 * Extended support for interfaces
 	* Datadog for tracing support
 	* Other data stores for secret manager/db
+* Better dev tools
 
 ## Components
 
