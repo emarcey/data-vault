@@ -84,6 +84,7 @@ func (s *service) DeleteUser(ctx context.Context, userId string) error {
 	if err != nil {
 		return err
 	}
+	delete(s.deps.AuthUsers, userId)
 	return nil
 }
 
