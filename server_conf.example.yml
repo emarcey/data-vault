@@ -7,11 +7,11 @@ serverConfigs:
   dataRefreshSeconds: 5
   accessTokenHours: 24
   tracerOpts:
-  tracerType:
-  sentryOpts:
-    dsn:
+    tracerType:
+    sentryOpts:
+      dsn:
 secretsManagerOpts:
-  managerType:
+  managerType: mongodb
   mongoOpts:
     dbUsername:
     dbPassword:
@@ -20,7 +20,7 @@ secretsManagerOpts:
     secretsCollectionName:
     logCollectionName:
 databaseOpts:
-  driver:
+  driver: postgres
   username:
   password:
   host:
