@@ -8,7 +8,7 @@ A personal project for the storage of sensitive key-value pairs.
 
 The keys and values are stored in separated locations.
 
-First, the key name and metadata is stored in a relational database (Postgres implementation provided). The value is encrypted using AES-256 and is paired with a randomly generated UUID and stored alongside metadata.
+First, the key name and metadata is stored in a relational database (Postgres implementation provided). The value is encrypted using [AES-256](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) and is paired with a randomly generated UUID and stored alongside metadata.
 
 The Initialization Vector (IV) and the Encryption Key are stored in a separate datastore (MongoDB implementation provided), indexed by the UUID.
 
@@ -202,6 +202,14 @@ In all subsequent requests, API endpoints should be queried with the header `Acc
 	* [Golang](golang.org) service
 		* Endpoints supported with [go-kit](https://github.com/go-kit/kit) and [gorilla mux](https://github.com/gorilla/mux)
 
+
+## Configuration
+
+Server configuration is done using the `server_conf.yml` file.
+
+This file allows the executor to configure the address, environment and other server configs (e.g. how long should access tokens last).
+
+In addition, this is where connection settings for data stores and other dependencies are configured.
 
 ## Development
 

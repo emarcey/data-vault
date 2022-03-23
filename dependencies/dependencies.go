@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	sentry "github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
@@ -26,6 +25,7 @@ type DependenciesInitOpts struct {
 	LoggerType         string                     `yaml:"loggerType"`
 	SecretsManagerOpts secrets.SecretsManagerOpts `yaml:"secretsManagerOpts"`
 	DatabaseOpts       database.DatabaseOpts      `yaml:"databaseOpts"`
+	TracerOpts         tracer.TracerOpts          `yaml:"tracerOpts"`
 	Env                string                     `yaml:"env"`
 	Version            string                     `yaml:"version"`
 	ServerConfigs      *ServerConfigs             `yaml:"serverConfigs"`
@@ -59,13 +59,7 @@ func MakeDependencies(ctx context.Context, opts DependenciesInitOpts) (*Dependen
 	if err != nil {
 		return nil, err
 	}
-
-	tracerOpts := tracer.NewTracerCreatorOpts{
-		Env:        opts.Env,
-		Logger:     logger,
-		SentryOpts: sentry.ClientOptions{},
-	}
-	tracer, err := tracer.NewTracerCreator(tracerOpts)
+	tracer, err := tracer.NewTracerCreator(logger, opts.TracerOpts)
 	if err != nil {
 		return nil, err
 	}

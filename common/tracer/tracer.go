@@ -19,19 +19,25 @@ type Tracer interface {
 
 type TracerCreator func(ctx context.Context, operation string) Tracer
 
-type NewTracerCreatorOpts struct {
-	Env        string
-	Logger     *logrus.Logger
-	SentryOpts sentry.ClientOptions
+type SentryOpts struct {
+	DSN string `yaml:"dsn"`
 }
 
-func NewTracerCreator(opts NewTracerCreatorOpts) (TracerCreator, error) {
-	if opts.Env == "local" {
-		return NewLocalTracerMaker(opts.Logger), nil
+type TracerOpts struct {
+	TracerType string     `yaml:"tracerType"`
+	SentryOpts SentryOpts `yaml:"sentryOpts"`
+}
+
+func NewTracerCreator(logger *logrus.Logger, opts TracerOpts) (TracerCreator, error) {
+	if opts.TracerType == "sentry" {
+		tracer, err := NewSentryTracerMaker(sentry.ClientOptions{
+			Dsn: opts.SentryOpts.DSN,
+		})
+		if err != nil {
+			return nil, common.NewInitializationError("tracer", err.Error())
+		}
+		return tracer, nil
 	}
-	tracer, err := NewSentryTracerMaker(opts.SentryOpts)
-	if err != nil {
-		return nil, common.NewInitializationError("tracer", err.Error())
-	}
-	return tracer, nil
+
+	return NewLocalTracerMaker(logger), nil
 }

@@ -6,6 +6,10 @@ env: local
 serverConfigs:
   dataRefreshSeconds: 5
   accessTokenHours: 24
+  tracerOpts:
+  tracerType:
+  sentryOpts:
+    dsn:
 secretsManagerOpts:
   managerType:
   mongoOpts:
