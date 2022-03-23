@@ -55,3 +55,20 @@ func getSecretEndpoint(s Service) endpointBuilder {
 		path:     "/secrets/{name}",
 	}
 }
+
+func deleteSecretEndpoint(s Service) endpointBuilder {
+	op := "DeleteSecret"
+	e := func(ctx context.Context, secretNameInterface interface{}) (interface{}, error) {
+		secretName, ok := secretNameInterface.(string)
+		if !ok {
+			return nil, common.NewInvalidParamsError(op, "Expected user ID of type string. Got %T", secretNameInterface)
+		}
+		return nil, s.DeleteSecret(ctx, secretName)
+	}
+	return endpointBuilder{
+		endpoint: e,
+		decoder:  decodeRequestUrlName(op),
+		method:   "DELETE",
+		path:     "/secrets/{name}",
+	}
+}

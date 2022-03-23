@@ -22,8 +22,7 @@ type Service interface {
 	// keys
 	CreateSecret(ctx context.Context, key *CreateSecretRequest) (*common.Secret, error)
 	GetSecret(ctx context.Context, secretName string) (*common.Secret, error)
-	// UpdateKey(ctx context.Context, user *common.User, key *CreateSecretArgs) (*common.Key, error)
-	// DeleteKey(ctx context.Context, user *common.User, keyName string) (*common.Key, error)
+	DeleteSecret(ctx context.Context, keyName string) error
 }
 
 type service struct {
@@ -58,9 +57,11 @@ func (s *service) CreateUser(ctx context.Context, req *CreateUserRequest) (*Crea
 	if err != nil {
 		return nil, err
 	}
+
 	return &CreateUserResponse{
 		UserId:     userId,
 		UserSecret: userSecret,
+		StatusCode: 201,
 	}, nil
 }
 
@@ -79,7 +80,11 @@ func (s *service) DeleteUser(ctx context.Context, userId string) error {
 		tx.Rollback()
 		return err
 	}
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *service) GetAccessToken(ctx context.Context, user *common.User) (*common.AccessToken, error) {
@@ -135,6 +140,7 @@ func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequ
 		Description: createArgs.Description,
 		CreatedBy:   user.Id,
 		UpdatedBy:   user.Id,
+		StatusCode:  201,
 	}
 	err = database.CreateSecret(ctx, s.deps.Database, secret)
 	if err != nil {
@@ -164,4 +170,17 @@ func (s *service) GetSecret(ctx context.Context, secretName string) (*common.Sec
 
 	dbSecret.Value = plaintext
 	return dbSecret, nil
+}
+
+func (s *service) DeleteSecret(ctx context.Context, secretName string) error {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	err = database.DeleteSecret(ctx, s.deps.Database, user.Id, secretName)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }

@@ -12,7 +12,7 @@ import (
 // EndpointLoggingWrapper adds logs to every endpoint, exactly like it sounds
 func EndpointLoggingWrapper(e endpoint.Endpoint, op string, deps *dependencies.Dependencies) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		deps.Logger.Infof("Endpoint %s called with request: %v", op, request)
+		deps.Logger.Debugf("Endpoint %s called with request: %v", op, request)
 		resp, err := e(ctx, request)
 		if err != nil {
 			deps.Logger.Errorf("Endpoint %s returned with error: %v", op, err)
@@ -25,7 +25,7 @@ func EndpointLoggingWrapper(e endpoint.Endpoint, op string, deps *dependencies.D
 		} else {
 			logResp = string(marshalledRespBytes)
 		}
-		deps.Logger.Infof("Endpoint %s returned: %v", op, logResp)
+		deps.Logger.Debugf("Endpoint %s returned: %v", op, logResp)
 		return resp, err
 	}
 }

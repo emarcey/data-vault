@@ -49,6 +49,7 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		getUserEndpoint(s),
 		deleteUserEndpoint(s),
 		createUserEndpoint(s),
+		deleteSecretEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleAdminEndpoints, adminEndpoints, encodeResponse, options...)
 
@@ -96,10 +97,15 @@ func decodeRequestUrlName(op string) httptransport.DecodeRequestFunc {
 // reason to provide anything more specific. It's certainly possible to
 // specialize on a per-response (per-method) basis.
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
-	if v := w.Header().Get("Content-Type"); v == "" {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		// Only write json body if we're setting response as json
-		return json.NewEncoder(w).Encode(response)
+	if response == nil {
+		w.WriteHeader(204)
+		return nil
 	}
-	return nil
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	responser, ok := response.(common.Responser)
+	if ok {
+		w.WriteHeader(responser.GetStatusCode())
+	}
+	return json.NewEncoder(w).Encode(response)
 }

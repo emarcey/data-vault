@@ -8,6 +8,10 @@ import (
 var HeadersContextKey struct{}
 var UserContextKey struct{}
 
+func InjectHeaderIntoContext(ctx context.Context, r *http.Request) context.Context {
+	return context.WithValue(ctx, HeadersContextKey, r.Header)
+}
+
 func FetchStringFromContextHeaders(ctx context.Context, key string) (string, error) {
 	op := "FetchStringFromContextHeaders"
 	headersInterface := ctx.Value(HeadersContextKey)

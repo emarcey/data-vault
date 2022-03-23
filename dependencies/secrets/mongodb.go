@@ -14,18 +14,21 @@ import (
 )
 
 type MongoSecretsOpts struct {
-	DbUsername     string `yaml:"dbUsername"`
-	DbPassword     string `yaml:"dbPassword"`
-	ClusterName    string `yaml:"clusterName"`
-	DatabaseName   string `yaml:"databaseName"`
-	CollectionName string `yaml:"collectionName"`
+	DbUsername            string `yaml:"dbUsername"`
+	DbPassword            string `yaml:"dbPassword"`
+	ClusterName           string `yaml:"clusterName"`
+	DatabaseName          string `yaml:"databaseName"`
+	SecretsCollectionName string `yaml:"secretsCollectionName"`
+	LogCollectionName     string `yaml:"logCollectionName"`
 }
 
 type MongoSecretsManager struct {
-	client         *mongo.Client
-	collection     *mongo.Collection
-	databaseName   string
-	collectionName string
+	client                *mongo.Client
+	secretsCollection     *mongo.Collection
+	logCollection         *mongo.Collection
+	databaseName          string
+	secretsCollectionName string
+	logCollectionName     string
 }
 
 func (s *MongoSecretsManager) reconnect(ctx context.Context) error {
@@ -33,12 +36,13 @@ func (s *MongoSecretsManager) reconnect(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	s.collection = s.client.Database(s.databaseName).Collection(s.collectionName)
+	s.secretsCollection = s.client.Database(s.databaseName).Collection(s.secretsCollectionName)
+	s.logCollection = s.client.Database(s.databaseName).Collection(s.logCollectionName)
 	return nil
 }
 
 func (s *MongoSecretsManager) GetSecret(ctx context.Context, secretId string) (*common.EncryptedSecret, error) {
-	result := s.collection.FindOne(ctx, bson.M{"_id": secretId})
+	result := s.secretsCollection.FindOne(ctx, bson.M{"_id": secretId})
 	if result == nil {
 		return nil, common.NewMongoGetSecretError("FindOne for secret %s returned nil.", secretId)
 	}
@@ -56,7 +60,7 @@ func (s *MongoSecretsManager) GetSecret(ctx context.Context, secretId string) (*
 }
 
 func (s *MongoSecretsManager) CreateSecret(ctx context.Context, secret *common.EncryptedSecret) error {
-	_, err := s.collection.InsertOne(ctx, secret)
+	_, err := s.secretsCollection.InsertOne(ctx, secret)
 	if err != nil {
 		return common.NewMongoCreateSecretError("Error inserting secret, %s, received error, %v", secret.Id, err)
 	}
@@ -65,6 +69,10 @@ func (s *MongoSecretsManager) CreateSecret(ctx context.Context, secret *common.E
 
 func (s *MongoSecretsManager) Close(ctx context.Context) {
 	s.client.Disconnect(ctx)
+}
+
+func (s *MongoSecretsManager) LogAccess(ctx context.Context, log *common.AccessLog) error {
+	return nil
 }
 
 func NewMongoSecretsManager(ctx context.Context, opts MongoSecretsOpts) (SecretsManager, error) {
@@ -82,10 +90,12 @@ func NewMongoSecretsManager(ctx context.Context, opts MongoSecretsOpts) (Secrets
 	}
 
 	secretsManager := &MongoSecretsManager{
-		client:         client,
-		collection:     nil,
-		databaseName:   opts.DatabaseName,
-		collectionName: opts.CollectionName,
+		client:                client,
+		secretsCollection:     nil,
+		logCollection:         nil,
+		databaseName:          opts.DatabaseName,
+		secretsCollectionName: opts.SecretsCollectionName,
+		logCollectionName:     opts.LogCollectionName,
 	}
 	err = secretsManager.reconnect(ctx)
 	if err != nil {

@@ -11,6 +11,6 @@ import (
 // WriteHeadersToContext populates the context with values from the request header
 func WriteHeadersToContext() httptransport.RequestFunc {
 	return func(ctx context.Context, r *http.Request) context.Context {
-		return context.WithValue(ctx, common.HeadersContextKey, r.Header)
+		return common.InjectHeaderIntoContext(ctx, r)
 	}
 }

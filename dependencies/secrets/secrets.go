@@ -9,6 +9,7 @@ import (
 type SecretsManager interface {
 	CreateSecret(ctx context.Context, secret *common.EncryptedSecret) error
 	GetSecret(ctx context.Context, secretId string) (*common.EncryptedSecret, error)
+	LogAccess(ctx context.Context, log *common.AccessLog) error
 	Close(ctx context.Context)
 }
 

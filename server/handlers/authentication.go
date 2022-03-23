@@ -17,6 +17,7 @@ func EndpointClientAuthenticationWrapper(e endpoint.Endpoint, op string, deps *d
 		defer tracer.Close()
 
 		userId, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_CLIENT_ID)
+		tracer.AddBreadcrumb(map[string]interface{}{"userId": userId})
 		if err != nil {
 			tracer.CaptureException(err)
 			deps.Logger.Errorf("Error authenticating %s: %v", op, err)
@@ -64,14 +65,16 @@ func EndpointAccessTokenAuthenticationWrapper(e endpoint.Endpoint, op string, de
 		defer tracer.Close()
 
 		authTokenRaw, err := common.FetchStringFromContextHeaders(ctx, common.HEADER_ACCESS_TOKEN)
+
 		if err != nil {
 			tracer.CaptureException(err)
 			deps.Logger.Errorf("Error authenticating %s: %v", op, err)
 			return nil, common.NewAuthorizationError()
 		}
 		authToken := common.HashSha256(authTokenRaw)
-
+		tracer.AddBreadcrumb(map[string]interface{}{"authToken": authToken})
 		accessToken, ok := deps.AccessTokens[authToken]
+		tracer.AddBreadcrumb(map[string]interface{}{"userId": accessToken.UserId})
 		if !ok {
 			internalError := fmt.Errorf("Auth Token not found")
 			tracer.CaptureException(internalError)

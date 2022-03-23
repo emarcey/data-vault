@@ -32,7 +32,7 @@ func CreateSecret(ctx context.Context, db Database, secret *common.Secret) error
 	return nil
 }
 
-func GetSecretByName(ctx context.Context, db Database, userId string) (*common.Secret, error) {
+func GetSecretByName(ctx context.Context, db Database, secretName string) (*common.Secret, error) {
 	operation := "GetSecretByName"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
@@ -52,7 +52,7 @@ func GetSecretByName(ctx context.Context, db Database, userId string) (*common.S
 	WHERE	s.name = $1
 		AND s.is_active
 	`
-	rows, err := db.QueryContext(tracer.Context(), query, userId)
+	rows, err := db.QueryContext(tracer.Context(), query, secretName)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
@@ -79,7 +79,36 @@ func GetSecretByName(ctx context.Context, db Database, userId string) (*common.S
 		return nil, dbErr
 	}
 	if user == nil {
-		return nil, common.NewResourceNotFoundError(operation, "id", userId)
+		return nil, common.NewResourceNotFoundError(operation, "id", secretName)
 	}
 	return user, nil
+}
+
+func DeleteSecret(ctx context.Context, db Database, userId, secretName string) error {
+	operation := "DeleteSecret"
+	tracer := db.CreateTrace(ctx, operation)
+	defer tracer.Close()
+
+	query := `
+	UPDATE  admin.secrets
+	SET is_active = false,
+		updated_by = $1
+	WHERE	name = $2 AND is_active = true
+	`
+	result, err := db.ExecContext(tracer.Context(), query, userId, secretName)
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "")
+		tracer.CaptureException(dbErr)
+		return dbErr
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "")
+		tracer.CaptureException(dbErr)
+		return dbErr
+	}
+	db.GetLogger().Debugf("%s soft deleted %d rows", operation, rowsAffected)
+
+	return nil
 }
