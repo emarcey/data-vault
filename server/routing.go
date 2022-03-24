@@ -45,7 +45,6 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		w.Write([]byte(s.Version()))
 	})
 	adminEndpoints := []endpointBuilder{
-		listUsersEndpoint(s),
 		getUserEndpoint(s),
 		deleteUserEndpoint(s),
 		createUserEndpoint(s),
@@ -59,8 +58,11 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 	makeMethods(r, deps, handlers.HandleClientEndpoints, clientEndpoints, encodeResponse, options...)
 
 	accessTokenEndpoints := []endpointBuilder{
+		listUsersEndpoint(s),
 		createSecretEndpoint(s),
 		getSecretEndpoint(s),
+		createSecretPermissionEndpoint(s),
+		deleteSecretPermissionEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleTokenEndpoints, accessTokenEndpoints, encodeResponse, options...)
 	return r

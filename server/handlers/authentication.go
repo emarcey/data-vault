@@ -74,14 +74,13 @@ func EndpointAccessTokenAuthenticationWrapper(e endpoint.Endpoint, op string, de
 		authToken := common.HashSha256(authTokenRaw)
 		tracer.AddBreadcrumb(map[string]interface{}{"authToken": authToken})
 		accessToken, ok := deps.AccessTokens[authToken]
-		tracer.AddBreadcrumb(map[string]interface{}{"userId": accessToken.UserId})
 		if !ok {
 			internalError := fmt.Errorf("Auth Token not found")
 			tracer.CaptureException(internalError)
 			deps.Logger.Errorf("Error authenticating %s: %v", op, internalError)
 			return nil, common.NewAuthorizationError()
 		}
-
+		tracer.AddBreadcrumb(map[string]interface{}{"userId": accessToken.UserId})
 		user, ok := deps.AuthUsers[accessToken.UserId]
 		if !ok {
 			internalError := fmt.Errorf("User not found for accessToken %s", authToken)

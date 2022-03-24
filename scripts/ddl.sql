@@ -87,4 +87,23 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 COMMENT ON TABLE admin.secrets IS 'secrets stores all user created secrets for data being stored. Kept separate from information schema so we can log who did what.';
 CREATE UNIQUE INDEX uq__admin__secrets__name ON admin.secrets(name) WHERE is_active;
 
+CREATE TABLE admin.secret_permissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES admin.users(id) NOT NULL,
+    secret_id UUID REFERENCES admin.secrets(id) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    created_by UUID REFERENCES admin.users(id) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    updated_by UUID REFERENCES admin.users(id) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE TRIGGER set_admin__secret_permissions_timestamp
+    BEFORE UPDATE ON admin.secret_permissions
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+COMMENT ON TABLE admin.secret_permissions IS 'secret permissions stores all secret access permissions';
+CREATE UNIQUE INDEX uq__admin__secret_permissions__user_secret ON admin.secret_permissions(user_id, secret_id) WHERE is_active;
+
 COMMIT;

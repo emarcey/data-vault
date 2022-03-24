@@ -19,6 +19,10 @@ type User struct {
 	StatusCode int    `json:"-"`
 }
 
+func (u *User) IsAdmin() bool {
+	return u.Type == "admin"
+}
+
 func (u *User) GetStatusCode() int {
 	if u.StatusCode == 0 {
 		return 200

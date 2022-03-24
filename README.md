@@ -21,15 +21,16 @@ Access is provisioned according to users, both standard and developer. For all i
 Developer users have the ability to:
 
 1. Create a key-value pair
-1. Fetch a key-value pair
+1. Fetch a key-value pair for keys they have created or to which they have been granted access
+1. Grant/Revoke permissions on keys they have created to other users
+1. List users
 
 Admins have extended permissions. In addition to create/fetch, they have the ability to
 
 1. Delete a key-value pair
-1. Interact with users.
-	1. List users
-	1. Create new users
-	1. Delete users
+1. Grant/Revoke permissions on any keys
+1. Create new users
+1. Delete users
 
 
 All API interactions with the key-value store (fetch, create, delete) are additionally logged in the secrets datastore (MongoDB implementation provided). The MongoDB implementation is structured for a time-series collection keyed on user ID.
@@ -70,7 +71,7 @@ In all subsequent requests, API endpoints should be queried with the header `Acc
 
 ### Users
 
-**Note: All User Endpoints are currently Admin-Only**
+**Note: All User Endpoints except List are currently Admin-Only**
 
 1. List
 	* Method: GET
@@ -171,11 +172,35 @@ In all subsequent requests, API endpoints should be queried with the header `Acc
 	* Note: Delete is soft delete, so record will be inaccessible, but not deleted from the database entirely.
 	* Note: endpoint is admin only
 
+
+### Secret Permissions
+
+1. Create
+	* Method: POST
+	* URI: `/secrets/{secretName}/permissions`
+	* Request:
+		```json
+		{
+			"user_id": "c13dc88b-9563-43d8-bb70-81cb7f5af675"
+		}
+		```
+	* Response: None, if successful
+1. Delete
+	* Method: DELETE
+	* URI: `/secrets/{secretName}/permissions`
+	* Request:
+		```json
+		{
+			"user_id": "c13dc88b-9563-43d8-bb70-81cb7f5af675"
+		}
+		```
+	* Response: None, if successful
+
+
 ## Roadmap
 
 * User key rotation
 * Improved permissioning
-	* Grant users access to specific key-value pairs
 	* Implement user groups for blanket access
 	* Wildcard-based access
 * Extended support for interfaces

@@ -23,3 +23,8 @@ type CreateSecretRequest struct {
 	Value       string `json:"value"`
 	Description string `json:"description"`
 }
+
+type SecretPermissionRequest struct {
+	SecretName string `json:"-"`
+	UserId     string `json:"user_id"`
+}

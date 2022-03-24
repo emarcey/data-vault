@@ -32,7 +32,7 @@ func CreateSecret(ctx context.Context, db Database, secret *common.Secret) error
 	return nil
 }
 
-func GetSecretByName(ctx context.Context, db Database, secretName string) (*common.Secret, error) {
+func GetSecretByName(ctx context.Context, db Database, user *common.User, secretName string) (*common.Secret, error) {
 	operation := "GetSecretByName"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
@@ -49,10 +49,13 @@ func GetSecretByName(ctx context.Context, db Database, secretName string) (*comm
 		ON 	s.created_by = created_by_user.id
 		JOIN	admin.users updated_by_user
 		ON 	s.updated_by = updated_by_user.id
-	WHERE	s.name = $1
+	LEFT JOIN admin.secret_permissions sp
+		ON sp.secret_id = s.id AND sp.user_id = $1 AND sp.is_active
+	WHERE	s.name = $2
 		AND s.is_active
+		AND (sp.id IS NOT NULL OR $3 OR s.created_by = $4)
 	`
-	rows, err := db.QueryContext(tracer.Context(), query, secretName)
+	rows, err := db.QueryContext(tracer.Context(), query, user.Id, secretName, user.IsAdmin(), user.Id)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
@@ -60,7 +63,7 @@ func GetSecretByName(ctx context.Context, db Database, secretName string) (*comm
 	}
 	defer rows.Close()
 
-	var user *common.Secret
+	var secret *common.Secret
 
 	for rows.Next() {
 		var row common.Secret
@@ -70,7 +73,7 @@ func GetSecretByName(ctx context.Context, db Database, secretName string) (*comm
 			tracer.CaptureException(dbErr)
 			return nil, dbErr
 		}
-		user = &row
+		secret = &row
 	}
 	err = rows.Err()
 	if err != nil {
@@ -78,10 +81,48 @@ func GetSecretByName(ctx context.Context, db Database, secretName string) (*comm
 		tracer.CaptureException(dbErr)
 		return nil, dbErr
 	}
-	if user == nil {
-		return nil, common.NewResourceNotFoundError(operation, "id", secretName)
+	if secret == nil {
+		return nil, common.NewResourceNotFoundError(operation, "name", secretName)
 	}
-	return user, nil
+	return secret, nil
+}
+
+func GetSecretIdWithWriteAccess(ctx context.Context, db Database, user *common.User, secretName string) (string, error) {
+	operation := "GetSecretIdWithWriteAccess"
+	tracer := db.CreateTrace(ctx, operation)
+	defer tracer.Close()
+
+	query := `
+	SELECT	s.id
+	FROM	admin.secrets s
+	JOIN	admin.users created_by_user
+		ON 	s.created_by = created_by_user.id
+		JOIN	admin.users updated_by_user
+		ON 	s.updated_by = updated_by_user.id
+	WHERE	s.name = $1
+		AND s.is_active
+		AND ($2 OR s.created_by = $3)
+	`
+	rows, err := db.QueryContext(tracer.Context(), query, secretName, user.IsAdmin(), user.Id)
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "")
+		tracer.CaptureException(dbErr)
+		return "", dbErr
+	}
+	defer rows.Close()
+
+	var id string
+
+	for rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			dbErr := common.NewDatabaseError(err, operation, "Error in scan operation: %v", err)
+			tracer.CaptureException(dbErr)
+			return "", dbErr
+		}
+		return id, nil
+	}
+	return "", common.NewResourceNotFoundError(operation, "name", secretName)
 }
 
 func DeleteSecret(ctx context.Context, db Database, userId, secretName string) error {

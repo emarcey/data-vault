@@ -19,10 +19,12 @@ type Service interface {
 	DeleteUser(ctx context.Context, id string) error
 	GetAccessToken(ctx context.Context, user *common.User) (*common.AccessToken, error)
 
-	// keys
+	// secrets
 	CreateSecret(ctx context.Context, key *CreateSecretRequest) (*common.Secret, error)
 	GetSecret(ctx context.Context, secretName string) (*common.Secret, error)
-	DeleteSecret(ctx context.Context, keyName string) error
+	DeleteSecret(ctx context.Context, secretName string) error
+	GrantPermission(ctx context.Context, req *SecretPermissionRequest) error
+	RevokePermission(ctx context.Context, req *SecretPermissionRequest) error
 }
 
 type service struct {
@@ -110,12 +112,14 @@ func (s *service) GetAccessToken(ctx context.Context, user *common.User) (*commo
 		tx.Rollback()
 		return nil, err
 	}
-	return &common.AccessToken{
+	token := &common.AccessToken{
 		Id:        accessToken,
 		UserId:    user.Id,
 		IsLatest:  true,
 		InvalidAt: invalidAt,
-	}, nil
+	}
+	s.deps.AccessTokens[accessToken] = token
+	return token, nil
 }
 
 func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequest) (*common.Secret, error) {
@@ -167,7 +171,7 @@ func (s *service) GetSecret(ctx context.Context, secretName string) (*common.Sec
 		return nil, err
 	}
 
-	dbSecret, err := database.GetSecretByName(ctx, s.deps.Database, secretName)
+	dbSecret, err := database.GetSecretByName(ctx, s.deps.Database, user, secretName)
 	if err != nil {
 		return nil, err
 	}
@@ -201,4 +205,41 @@ func (s *service) DeleteSecret(ctx context.Context, secretName string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *service) GrantPermission(ctx context.Context, req *SecretPermissionRequest) error {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = s.deps.SecretsManager.LogAccess(ctx, common.NewAccessLog(user.Id, "DeletePermission", req.SecretName))
+	if err != nil {
+		return err
+	}
+
+	secretId, err := database.GetSecretIdWithWriteAccess(ctx, s.deps.Database, user, req.SecretName)
+	if err != nil {
+		return err
+	}
+
+	return database.CreateSecretPermission(ctx, s.deps.Database, user.Id, req.UserId, secretId)
+}
+
+func (s *service) RevokePermission(ctx context.Context, req *SecretPermissionRequest) error {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = s.deps.SecretsManager.LogAccess(ctx, common.NewAccessLog(user.Id, "RevokePermission", req.SecretName))
+	if err != nil {
+		return err
+	}
+
+	secretId, err := database.GetSecretIdWithWriteAccess(ctx, s.deps.Database, user, req.SecretName)
+	if err != nil {
+		return err
+	}
+	return database.DeleteSecretPermission(ctx, s.deps.Database, user.Id, req.UserId, secretId)
 }
