@@ -4,6 +4,13 @@ import (
 	"regexp"
 )
 
+type CacheUpdateType int
+
+const (
+	CACHE_ADD    CacheUpdateType = 1
+	CACHE_DELETE                 = 2
+)
+
 const HEADER_ACCESS_TOKEN = "Access-Token"
 const HEADER_CLIENT_ID = "Client-Id"
 const HEADER_CLIENT_SECRET = "Client-Secret"

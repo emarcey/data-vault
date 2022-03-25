@@ -3,7 +3,6 @@ package dependencies
 import (
 	"context"
 	"io/ioutil"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -36,8 +35,8 @@ type Dependencies struct {
 	Tracer         tracer.TracerCreator
 	SecretsManager secrets.SecretsManager
 	Database       *database.DatabaseEngine
-	AuthUsers      map[string]*common.User
-	AccessTokens   map[string]*common.AccessToken
+	AuthUsers      *UserCache
+	AccessTokens   *AccessTokenCache
 	ServerConfigs  *ServerConfigs
 }
 
@@ -73,12 +72,12 @@ func MakeDependencies(ctx context.Context, opts DependenciesInitOpts) (*Dependen
 		return nil, err
 	}
 
-	authUsers, err := database.SelectUsersForAuth(ctx, db)
+	authUsers, err := NewUserCache(ctx, logger, db, opts.ServerConfigs.DataRefreshSeconds)
 	if err != nil {
 		return nil, err
 	}
 
-	accessTokens, err := database.SelectAccessTokensForAuth(ctx, db)
+	accessTokens, err := NewAccessTokenCache(ctx, logger, db, opts.ServerConfigs.DataRefreshSeconds)
 	if err != nil {
 		return nil, err
 	}
@@ -91,27 +90,5 @@ func MakeDependencies(ctx context.Context, opts DependenciesInitOpts) (*Dependen
 		AccessTokens:   accessTokens,
 		ServerConfigs:  opts.ServerConfigs,
 	}
-
-	timer := time.NewTicker(time.Duration(opts.ServerConfigs.DataRefreshSeconds) * time.Second)
-	go func() {
-		for true {
-			select {
-			case <-ctx.Done():
-				logger.Warn("Context cancelled. No more refreshes.")
-				return
-			case <-timer.C:
-				authUsers, err := database.SelectUsersForAuth(ctx, db)
-				if err != nil {
-					logger.Errorf("Error in SelectUsersForAuth refresh: %v", err)
-				}
-				deps.AuthUsers = authUsers
-				accessTokens, err := database.SelectAccessTokensForAuth(ctx, db)
-				if err != nil {
-					logger.Errorf("Error in SelectAccessTokensForAuth refresh: %v", err)
-				}
-				deps.AccessTokens = accessTokens
-			}
-		}
-	}()
 	return deps, nil
 }

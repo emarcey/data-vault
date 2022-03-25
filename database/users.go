@@ -165,7 +165,7 @@ func DeleteUser(ctx context.Context, db Database, userId string) error {
 	return nil
 }
 
-func CreateUser(ctx context.Context, db Database, userId, userName, userType, userSecretHash string) error {
+func CreateUser(ctx context.Context, db Database, userId, userName, userType, userSecretHash string) (*common.User, error) {
 	operation := "CreateUser"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
@@ -173,23 +173,39 @@ func CreateUser(ctx context.Context, db Database, userId, userName, userType, us
 	query := `
 	INSERT INTO  admin.users (id, name, is_active, type, client_secret_hash)
 	VALUES($1, $2, $3, $4, $5)
+	RETURNING id, name, is_active, type
 	`
-	result, err := db.ExecContext(tracer.Context(), query, userId, userName, true, userType, userSecretHash)
+	var user *common.User
+
+	rows, err := db.QueryContext(tracer.Context(), query, userId, userName, true, userType, userSecretHash)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
-		return dbErr
+		return nil, dbErr
 	}
-
-	rowsAffected, err := result.RowsAffected()
+	defer rows.Close()
+	for rows.Next() {
+		var row common.User
+		err = rows.Scan(&row.Id, &row.Name, &row.IsActive, &row.Type)
+		if err != nil {
+			dbErr := common.NewDatabaseError(err, operation, "Error in scan operation: %v", err)
+			tracer.CaptureException(dbErr)
+			return nil, dbErr
+		}
+		user = &row
+	}
+	err = rows.Err()
 	if err != nil {
-		dbErr := common.NewDatabaseError(err, operation, "")
+		dbErr := common.NewDatabaseError(err, operation, "Error in rows.Err() operation: %v", err)
 		tracer.CaptureException(dbErr)
-		return dbErr
+		return nil, dbErr
 	}
-	db.GetLogger().Debugf("%s created %d rows", operation, rowsAffected)
+	if user == nil {
+		return nil, common.NewResourceNotFoundError(operation, "id", userId)
+	}
 
-	return nil
+	db.GetLogger().Debugf("%s created 1 row", operation)
+	return user, nil
 }
 
 func RotateUserSecret(ctx context.Context, db Database, userId, userSecretHash string) error {

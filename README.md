@@ -227,7 +227,6 @@ On success, this returns:
 
 ## Roadmap
 
-* User key rotation
 * Improved permissioning
 	* Implement user groups for blanket access
 	* Wildcard-based access

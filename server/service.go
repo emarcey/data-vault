@@ -56,10 +56,11 @@ func (s *service) GetUser(ctx context.Context, userId string) (*common.User, err
 func (s *service) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
 	userId := common.GenUuid()
 	userSecret := common.GenUuid()
-	err := database.CreateUser(ctx, s.deps.Database, userId, req.Name, req.Type, common.HashSha256(userSecret))
+	user, err := database.CreateUser(ctx, s.deps.Database, userId, req.Name, req.Type, common.HashSha256(userSecret))
 	if err != nil {
 		return nil, err
 	}
+	s.deps.AuthUsers.Add(userId, user)
 
 	return &CreateUserResponse{
 		UserId:     userId,
@@ -83,7 +84,7 @@ func (s *service) RotateUserSecret(ctx context.Context) (*CreateUserResponse, er
 		tx.Rollback()
 		return nil, err
 	}
-	delete(s.deps.AccessTokens, tokenId)
+	s.deps.AccessTokens.Delete(tokenId)
 	err = database.RotateUserSecret(ctx, s.deps.Database, user.Id, common.HashSha256(userSecret))
 	if err != nil {
 		return nil, err
@@ -109,7 +110,7 @@ func (s *service) DeleteUser(ctx context.Context, userId string) error {
 		tx.Rollback()
 		return err
 	}
-	delete(s.deps.AccessTokens, tokenId)
+	s.deps.AccessTokens.Delete(tokenId)
 	err = database.DeleteUser(ctx, s.deps.Database, userId)
 	if err != nil {
 		tx.Rollback()
@@ -119,7 +120,7 @@ func (s *service) DeleteUser(ctx context.Context, userId string) error {
 	if err != nil {
 		return err
 	}
-	delete(s.deps.AuthUsers, userId)
+	s.deps.AuthUsers.Delete(userId)
 	return nil
 }
 
@@ -137,7 +138,7 @@ func (s *service) GetAccessToken(ctx context.Context) (*common.AccessToken, erro
 		tx.Rollback()
 		return nil, err
 	}
-	delete(s.deps.AccessTokens, tokenId)
+	s.deps.AccessTokens.Delete(tokenId)
 	accessToken := common.GenUuid()
 	invalidAt := time.Now().Add(time.Duration(s.deps.ServerConfigs.AccessTokenHours) * time.Hour)
 	err = database.CreateAccessToken(ctx, tx, user.Id, common.HashSha256(accessToken), invalidAt)
@@ -156,7 +157,7 @@ func (s *service) GetAccessToken(ctx context.Context) (*common.AccessToken, erro
 		IsLatest:  true,
 		InvalidAt: invalidAt,
 	}
-	s.deps.AccessTokens[accessToken] = token
+	s.deps.AccessTokens.Add(tokenId, token)
 	return token, nil
 }
 
