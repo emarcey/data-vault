@@ -38,6 +38,18 @@ func getUserEndpoint(s Service) endpointBuilder {
 	}
 }
 
+func rotateUserSecretEndpoint(s Service) endpointBuilder {
+	e := func(ctx context.Context, _ interface{}) (interface{}, error) {
+		return s.RotateUserSecret(ctx)
+	}
+	return endpointBuilder{
+		endpoint: e,
+		decoder:  noOpDecodeRequest,
+		method:   "GET",
+		path:     "/rotate",
+	}
+}
+
 func deleteUserEndpoint(s Service) endpointBuilder {
 	op := "DeleteUser"
 	e := func(ctx context.Context, userIdInterface interface{}) (interface{}, error) {
@@ -87,11 +99,7 @@ func createUserEndpoint(s Service) endpointBuilder {
 
 func getAccessTokenEndpoint(s Service) endpointBuilder {
 	e := func(ctx context.Context, _ interface{}) (interface{}, error) {
-		user, err := common.FetchUserFromContext(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return s.GetAccessToken(ctx, user)
+		return s.GetAccessToken(ctx)
 	}
 	return endpointBuilder{
 		endpoint: e,

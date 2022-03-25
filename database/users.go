@@ -191,3 +191,31 @@ func CreateUser(ctx context.Context, db Database, userId, userName, userType, us
 
 	return nil
 }
+
+func RotateUserSecret(ctx context.Context, db Database, userId, userSecretHash string) error {
+	operation := "RotateUserSecret"
+	tracer := db.CreateTrace(ctx, operation)
+	defer tracer.Close()
+
+	query := `
+	UPDATE admin.users
+	SET client_secret_hash = $1
+	WHERE id = $2
+	`
+	result, err := db.ExecContext(tracer.Context(), query, userSecretHash, userId)
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "")
+		tracer.CaptureException(dbErr)
+		return dbErr
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "")
+		tracer.CaptureException(dbErr)
+		return dbErr
+	}
+	db.GetLogger().Debugf("%s created %d rows", operation, rowsAffected)
+
+	return nil
+}

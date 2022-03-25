@@ -14,10 +14,11 @@ type Service interface {
 
 	// users
 	ListUsers(ctx context.Context) ([]*common.User, error)
-	GetUser(ctx context.Context, id string) (*common.User, error)
+	GetUser(ctx context.Context, userId string) (*common.User, error)
 	CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error)
-	DeleteUser(ctx context.Context, id string) error
-	GetAccessToken(ctx context.Context, user *common.User) (*common.AccessToken, error)
+	RotateUserSecret(ctx context.Context) (*CreateUserResponse, error)
+	DeleteUser(ctx context.Context, userId string) error
+	GetAccessToken(ctx context.Context) (*common.AccessToken, error)
 
 	// secrets
 	CreateSecret(ctx context.Context, key *CreateSecretRequest) (*common.Secret, error)
@@ -67,16 +68,48 @@ func (s *service) CreateUser(ctx context.Context, req *CreateUserRequest) (*Crea
 	}, nil
 }
 
+func (s *service) RotateUserSecret(ctx context.Context) (*CreateUserResponse, error) {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userSecret := common.GenUuid()
+	tx, err := s.deps.Database.StartTransaction(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tokenId, err := database.DeprecateLatestAccessToken(ctx, s.deps.Database, user.Id)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	delete(s.deps.AccessTokens, tokenId)
+	err = database.RotateUserSecret(ctx, s.deps.Database, user.Id, common.HashSha256(userSecret))
+	if err != nil {
+		return nil, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+	return &CreateUserResponse{
+		UserId:     user.Id,
+		UserSecret: userSecret,
+		StatusCode: 201,
+	}, nil
+}
+
 func (s *service) DeleteUser(ctx context.Context, userId string) error {
 	tx, err := s.deps.Database.StartTransaction(ctx)
 	if err != nil {
 		return err
 	}
-	err = database.DeprecateLatestAccessToken(ctx, s.deps.Database, userId)
+	tokenId, err := database.DeprecateLatestAccessToken(ctx, s.deps.Database, userId)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
+	delete(s.deps.AccessTokens, tokenId)
 	err = database.DeleteUser(ctx, s.deps.Database, userId)
 	if err != nil {
 		tx.Rollback()
@@ -90,16 +123,21 @@ func (s *service) DeleteUser(ctx context.Context, userId string) error {
 	return nil
 }
 
-func (s *service) GetAccessToken(ctx context.Context, user *common.User) (*common.AccessToken, error) {
+func (s *service) GetAccessToken(ctx context.Context) (*common.AccessToken, error) {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	tx, err := s.deps.Database.StartTransaction(ctx)
 	if err != nil {
 		return nil, err
 	}
-	err = database.DeprecateLatestAccessToken(ctx, tx, user.Id)
+	tokenId, err := database.DeprecateLatestAccessToken(ctx, tx, user.Id)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
+	delete(s.deps.AccessTokens, tokenId)
 	accessToken := common.GenUuid()
 	invalidAt := time.Now().Add(time.Duration(s.deps.ServerConfigs.AccessTokenHours) * time.Hour)
 	err = database.CreateAccessToken(ctx, tx, user.Id, common.HashSha256(accessToken), invalidAt)

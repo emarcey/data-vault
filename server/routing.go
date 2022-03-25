@@ -54,6 +54,7 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 
 	clientEndpoints := []endpointBuilder{
 		getAccessTokenEndpoint(s),
+		rotateUserSecretEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleClientEndpoints, clientEndpoints, encodeResponse, options...)
 

@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"emarcey/data-vault/common"
@@ -50,7 +51,7 @@ func SelectAccessTokensForAuth(ctx context.Context, db Database) (map[string]*co
 	return accessTokenMap, nil
 }
 
-func DeprecateLatestAccessToken(ctx context.Context, db Database, userId string) error {
+func DeprecateLatestAccessToken(ctx context.Context, db Database, userId string) (string, error) {
 	operation := "DeprecateLatestAccessToken"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
@@ -60,22 +61,35 @@ func DeprecateLatestAccessToken(ctx context.Context, db Database, userId string)
 	SET 	is_latest = false
 	WHERE	user_id = $1
 		AND	is_latest = true
+	RETURNING id_hash
 	`
-	result, err := db.ExecContext(tracer.Context(), query, userId)
+	rows, err := db.QueryContext(tracer.Context(), query, userId)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
-		return dbErr
+		return "", dbErr
+	}
+	defer rows.Close()
+
+	var id string
+	for rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			dbErr := common.NewDatabaseError(err, operation, "Error in scan operation: %v", err)
+			tracer.CaptureException(dbErr)
+			return "", dbErr
+		}
+		break
+	}
+	err = rows.Err()
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "Error in rows.Err() operation: %v", err)
+		tracer.CaptureException(dbErr)
+		return "", dbErr
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		dbErr := common.NewDatabaseError(err, operation, "")
-		tracer.CaptureException(dbErr)
-		return dbErr
-	}
-	db.GetLogger().Debugf("%s updated %d rows", operation, rowsAffected)
-	return nil
+	db.GetLogger().Debugf("%s updated 1 row", operation)
+	return id, nil
 }
 
 func CreateAccessToken(ctx context.Context, db Database, userId, accessTokenHash string, invalidAt time.Time) error {
@@ -87,6 +101,8 @@ func CreateAccessToken(ctx context.Context, db Database, userId, accessTokenHash
 	INSERT INTO  admin.access_tokens (id_hash, user_id, is_latest, invalid_at)
 	VALUES($1, $2, $3, $4)
 	`
+
+	fmt.Printf("help?\n")
 	result, err := db.ExecContext(tracer.Context(), query, accessTokenHash, userId, true, invalidAt)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
