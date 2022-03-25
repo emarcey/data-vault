@@ -39,6 +39,8 @@ All API interactions with the key-value store (fetch, create, delete) are additi
 
 ### Authentication
 
+#### Access Token
+
 On creation, a user will be granted a client ID/secret pair. This pair will be used to identify the user, and is necessary for generating an Access Token, which is used to access all other endpoints.
 
 To create an access token, a user must call the following endpoint:
@@ -68,6 +70,32 @@ On success, this returns:
 where `id` is the access token to be used for future requests.
 
 In all subsequent requests, API endpoints should be queried with the header `Access-Token` set to the value of this id.
+
+#### Client Secret
+
+Should a user lose their secret, or if they believe it has been compromised, a user can rotate their secret, which is used to generate an access token.
+
+This is done with the call:
+
+`GET: {base_url}/rotate`
+
+With the headers:
+
+```json
+{
+	"Client-ID": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+	"Client-Secret": "9e5d5da6-24ed-42a9-a105-c531bed8175d",
+}
+```
+
+On success, this returns:
+
+```json
+{
+	"Client-ID": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+	"Client-Secret": "29a52d35-d8d5-4ead-ac4a-90dba908ecaa",
+}
+```
 
 ### Users
 
