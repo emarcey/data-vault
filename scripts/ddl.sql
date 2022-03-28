@@ -106,4 +106,61 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 COMMENT ON TABLE admin.secret_permissions IS 'secret permissions stores all secret access permissions';
 CREATE UNIQUE INDEX uq__admin__secret_permissions__user_secret ON admin.secret_permissions(user_id, secret_id) WHERE is_active;
 
+CREATE TABLE admin.user_groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    created_by UUID REFERENCES admin.users(id) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    updated_by UUID REFERENCES admin.users(id) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE TRIGGER set_admin__user_groups_timestamp
+    BEFORE UPDATE ON admin.user_groups
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+COMMENT ON TABLE admin.user_groups IS 'user_groups stores all distinct user permission groups';
+CREATE UNIQUE INDEX uq__admin__user_groups__name ON admin.user_groups(name) WHERE is_active;
+
+
+CREATE TABLE admin.user_group_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES admin.users(id) NOT NULL,
+    user_group_id UUID REFERENCES admin.user_groups(id) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    created_by UUID REFERENCES admin.users(id) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    updated_by UUID REFERENCES admin.users(id) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE TRIGGER set_admin__user_group_members_timestamp
+    BEFORE UPDATE ON admin.user_group_members
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+COMMENT ON TABLE admin.user_group_members IS 'user_group_members stores the mapping of users to user groups';
+CREATE UNIQUE INDEX uq__admin__user_group_members__user_secret ON admin.user_group_members(user_id, user_group_id) WHERE is_active;
+
+CREATE TABLE admin.secret_group_permissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_group_id UUID REFERENCES admin.user_groups(id) NOT NULL,
+    secret_id UUID REFERENCES admin.secrets(id) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    created_by UUID REFERENCES admin.users(id) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    updated_by UUID REFERENCES admin.users(id) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE TRIGGER set_admin__secret_group_permissions_timestamp
+    BEFORE UPDATE ON admin.secret_group_permissions
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+COMMENT ON TABLE admin.secret_group_permissions IS 'secret group permissions stores all secret access permissions for user groups';
+CREATE UNIQUE INDEX uq__admin__secret_group_permissions__user_group_secret ON admin.secret_group_permissions(user_group_id, secret_id) WHERE is_active;
+
 COMMIT;
