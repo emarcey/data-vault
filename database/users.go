@@ -91,6 +91,55 @@ func ListUsers(ctx context.Context, db Database) ([]*common.User, error) {
 	return users, nil
 }
 
+func ListUsersInGroup(ctx context.Context, db Database, userGroupId string) ([]*common.User, error) {
+	operation := "ListUsersInGroup"
+	tracer := db.CreateTrace(ctx, operation)
+	defer tracer.Close()
+
+	query := `
+	SELECT	u.id,
+			u.name,
+			u.is_active,
+			u.type
+	FROM	admin.users u
+	JOIN	user_group_members ugm
+		ON 	u.id = ugm.user_id
+		AND ugm.is_active
+	JOIN	user_groups ug
+		ON 	ugm.user_group_id = ug.id
+		AND ug.is_active
+		AND ug.id = $1
+	WHERE	u.is_active
+	`
+	rows, err := db.QueryContext(tracer.Context(), query, userGroupId)
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "")
+		tracer.CaptureException(dbErr)
+		return nil, dbErr
+	}
+	defer rows.Close()
+
+	var users []*common.User
+
+	for rows.Next() {
+		var row common.User
+		err = rows.Scan(&row.Id, &row.Name, &row.IsActive, &row.Type)
+		if err != nil {
+			dbErr := common.NewDatabaseError(err, operation, "Error in scan operation: %v", err)
+			tracer.CaptureException(dbErr)
+			return nil, dbErr
+		}
+		users = append(users, &row)
+	}
+	err = rows.Err()
+	if err != nil {
+		dbErr := common.NewDatabaseError(err, operation, "Error in rows.Err() operation: %v", err)
+		tracer.CaptureException(dbErr)
+		return nil, dbErr
+	}
+	return users, nil
+}
+
 func GetUserById(ctx context.Context, db Database, userId string) (*common.User, error) {
 	operation := "GetUserById"
 	tracer := db.CreateTrace(ctx, operation)

@@ -30,6 +30,19 @@ func (u *User) GetStatusCode() int {
 	return u.StatusCode
 }
 
+type UserGroup struct {
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	StatusCode int    `json:"-"`
+}
+
+func (u *UserGroup) GetStatusCode() int {
+	if u.StatusCode == 0 {
+		return 200
+	}
+	return u.StatusCode
+}
+
 type AccessToken struct {
 	Id         string    `json:"id"`
 	UserId     string    `json:"client_id"`
