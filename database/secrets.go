@@ -124,7 +124,7 @@ func ListSecrets(ctx context.Context, db Database, user *common.User) ([]*common
 	}
 	defer rows.Close()
 
-	var secrets []*common.Secret
+	secrets := make([]*common.Secret, 0)
 
 	for rows.Next() {
 		var row common.Secret

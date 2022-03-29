@@ -41,7 +41,7 @@ func createSecretPermissionEndpoint(s Service) endpointBuilder {
 		if err != nil {
 			return nil, err
 		}
-		return NewSimpleCreateResponse(), nil
+		return NewStatusResponse(), nil
 	}
 	return endpointBuilder{
 		endpoint: e,

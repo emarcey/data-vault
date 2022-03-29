@@ -39,15 +39,15 @@ type UserGroupMemberRequest struct {
 	UserId      string `json:"user_id"`
 }
 
-type SimpleCreateResponse struct {
+type StatusResponse struct {
 	StatusCode int `json:"-"`
 }
 
-func NewSimpleCreateResponse() *SimpleCreateResponse {
-	return &SimpleCreateResponse{StatusCode: 201}
+func NewStatusResponse() *StatusResponse {
+	return &StatusResponse{StatusCode: 201}
 }
 
-func (c *SimpleCreateResponse) GetStatusCode() int {
+func (c *StatusResponse) GetStatusCode() int {
 	if c.StatusCode == 0 {
 		return 201
 	}

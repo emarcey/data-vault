@@ -125,5 +125,10 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 	if ok {
 		w.WriteHeader(responser.GetStatusCode())
 	}
+
+	_, ok = response.(*StatusResponse)
+	if ok {
+		return nil
+	}
 	return json.NewEncoder(w).Encode(response)
 }

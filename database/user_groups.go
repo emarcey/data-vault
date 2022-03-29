@@ -67,7 +67,7 @@ func ListUserGroups(ctx context.Context, db Database) ([]*common.UserGroup, erro
 	}
 	defer rows.Close()
 
-	var users []*common.UserGroup
+	userGroups := make([]*common.UserGroup, 0)
 
 	for rows.Next() {
 		var row common.UserGroup
@@ -77,7 +77,7 @@ func ListUserGroups(ctx context.Context, db Database) ([]*common.UserGroup, erro
 			tracer.CaptureException(dbErr)
 			return nil, dbErr
 		}
-		users = append(users, &row)
+		userGroups = append(userGroups, &row)
 	}
 	err = rows.Err()
 	if err != nil {
@@ -85,7 +85,7 @@ func ListUserGroups(ctx context.Context, db Database) ([]*common.UserGroup, erro
 		tracer.CaptureException(dbErr)
 		return nil, dbErr
 	}
-	return users, nil
+	return userGroups, nil
 }
 
 func GetUserGroup(ctx context.Context, db Database, userId string) (*common.UserGroup, error) {

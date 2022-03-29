@@ -61,7 +61,7 @@ func (a *AccessToken) GetStatusCode() int {
 type Secret struct {
 	Id          string `json:"id"`
 	Name        string `json:"name"`
-	Value       string `json:"value"`
+	Value       string `json:"value,omitempty"`
 	Description string `json:"description"`
 	CreatedBy   string `json:"created_by"`
 	UpdatedBy   string `json:"updated_by"`

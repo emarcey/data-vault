@@ -70,7 +70,7 @@ func ListUsers(ctx context.Context, db Database) ([]*common.User, error) {
 	}
 	defer rows.Close()
 
-	var users []*common.User
+	users := make([]*common.User, 0)
 
 	for rows.Next() {
 		var row common.User
@@ -119,7 +119,7 @@ func ListUsersInGroup(ctx context.Context, db Database, userGroupId string) ([]*
 	}
 	defer rows.Close()
 
-	var users []*common.User
+	users := make([]*common.User, 0)
 
 	for rows.Next() {
 		var row common.User

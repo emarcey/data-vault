@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"emarcey/data-vault/common"
@@ -102,7 +101,6 @@ func CreateAccessToken(ctx context.Context, db Database, userId, accessTokenHash
 	VALUES($1, $2, $3, $4)
 	`
 
-	fmt.Printf("help?\n")
 	result, err := db.ExecContext(tracer.Context(), query, accessTokenHash, userId, true, invalidAt)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")

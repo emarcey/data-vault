@@ -263,13 +263,12 @@ On success, this returns:
 1. List
 	* Method: GET
 	* URI: `/secrets`
-	* Response: list of secrets; value will be empty
+	* Response: list of secrets; value will not be set
 		```json
 		[
 			{
 			    "id": "c13dc88b-9563-43d8-bb70-81cb7f5af675",
 			    "name": "my-key4",
-			    "value": " ",
 			    "description": "something",
 			    "created_by": "admin",
 			    "updated_by": "admin"
