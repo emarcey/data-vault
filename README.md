@@ -1,5 +1,26 @@
 # data_vault
 
+## Table of Contents
+<!-- MarkdownTOC -->
+
+- [Storage](#storage)
+- [Access](#access)
+- [API](#api)
+	- [Authentication](#authentication)
+		- [Access Token](#access-token)
+		- [Client Secret](#client-secret)
+	- [Users](#users)
+	- [User Groups](#user-groups)
+	- [Secrets](#secrets)
+	- [Secret Permissions](#secret-permissions)
+- [Roadmap](#roadmap)
+- [Components](#components)
+- [Configuration](#configuration)
+- [Development](#development)
+
+<!-- /MarkdownTOC -->
+
+
 A personal project for the storage of sensitive key-value pairs.
 
 *Version:* v0.0.1
