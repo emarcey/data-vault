@@ -72,7 +72,7 @@ With the headers:
 
 ```json
 {
-	"Client-ID": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+	"Client-Id": "03b6f72c-f3f4-43d9-a705-17b326924d74",
 	"Client-Secret": "9e5d5da6-24ed-42a9-a105-c531bed8175d"
 }
 ```
@@ -104,7 +104,7 @@ With the headers:
 
 ```json
 {
-	"Client-ID": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+	"Client-Id": "03b6f72c-f3f4-43d9-a705-17b326924d74",
 	"Client-Secret": "9e5d5da6-24ed-42a9-a105-c531bed8175d"
 }
 ```
@@ -113,7 +113,7 @@ On success, this returns:
 
 ```json
 {
-	"Client-ID": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+	"Client-Id": "03b6f72c-f3f4-43d9-a705-17b326924d74",
 	"Client-Secret": "29a52d35-d8d5-4ead-ac4a-90dba908ecaa"
 }
 ```
