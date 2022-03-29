@@ -16,7 +16,7 @@ func listUsersEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  noOpDecodeRequest,
-		method:   "GET",
+		method:   HTTP_GET,
 		path:     "/users",
 	}
 }
@@ -33,7 +33,7 @@ func getUserEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  decodeRequestUrlId(op),
-		method:   "GET",
+		method:   HTTP_GET,
 		path:     "/users/{id}",
 	}
 }
@@ -45,7 +45,7 @@ func rotateUserSecretEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  noOpDecodeRequest,
-		method:   "GET",
+		method:   HTTP_GET,
 		path:     "/rotate",
 	}
 }
@@ -62,7 +62,7 @@ func deleteUserEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  decodeRequestUrlId(op),
-		method:   "DELETE",
+		method:   HTTP_DELETE,
 		path:     "/users/{id}",
 	}
 }
@@ -92,7 +92,7 @@ func createUserEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  decodeCreateUserRequest,
-		method:   "POST",
+		method:   HTTP_POST,
 		path:     "/users",
 	}
 }
@@ -104,7 +104,7 @@ func getAccessTokenEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  noOpDecodeRequest,
-		method:   "GET",
+		method:   HTTP_GET,
 		path:     "/access_token",
 	}
 }

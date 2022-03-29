@@ -37,12 +37,16 @@ func createSecretPermissionEndpoint(s Service) endpointBuilder {
 		if !ok {
 			return nil, common.NewInvalidParamsError(op, "Expected request of type *SecretPermissionRequest. Got %T", reqInterface)
 		}
-		return nil, s.GrantPermission(ctx, req)
+		err := s.GrantPermission(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return NewSimpleCreateResponse(), nil
 	}
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  decodeSecretPermissionRequest,
-		method:   "POST",
+		method:   HTTP_POST,
 		path:     "/secrets/{name}/permissions",
 	}
 }
@@ -59,7 +63,7 @@ func deleteSecretPermissionEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  decodeSecretPermissionRequest,
-		method:   "DELETE",
+		method:   HTTP_DELETE,
 		path:     "/secrets/{name}/permissions",
 	}
 }

@@ -234,6 +234,7 @@ On success, this returns:
 	* Datadog for tracing support
 	* Other data stores for secret manager/db
 * Better dev tools
+* Automated tests
 
 ## Components
 

@@ -15,6 +15,13 @@ import (
 	"emarcey/data-vault/server/handlers"
 )
 
+var (
+	HTTP_GET    = "GET"
+	HTTP_POST   = "POST"
+	HTTP_DELETE = "DELETE"
+	HTTP_PUT    = "PUT"
+)
+
 type endpointBuilder struct {
 	endpoint endpoint.Endpoint
 	decoder  httptransport.DecodeRequestFunc
@@ -40,7 +47,7 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		httptransport.ServerBefore(handlers.WriteHeadersToContext()),
 	}
 
-	r.Methods("GET").Path("/version").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.Methods(HTTP_GET).Path("/version").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(s.Version()))
 	})
@@ -49,6 +56,13 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		deleteUserEndpoint(s),
 		createUserEndpoint(s),
 		deleteSecretEndpoint(s),
+		listUserGroupsEndpoint(s),
+		getUserGroupEndpoint(s),
+		deleteUserGroupEndpoint(s),
+		listUsersInGroupEndpoint(s),
+		createUserGroupEndpoint(s),
+		addUserToGroupEndpoint(s),
+		removeUserFromGroupEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleAdminEndpoints, adminEndpoints, encodeResponse, options...)
 

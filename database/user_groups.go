@@ -16,7 +16,7 @@ func CreateUserGroup(ctx context.Context, db Database, callingUserId, userGroupI
 	VALUES($1, $2, $3, $4, $5)
 	RETURNING id, name
 	`
-	var user *common.UserGroup
+	var userGroup *common.UserGroup
 	rows, err := db.QueryContext(tracer.Context(), query, userGroupId, userGroupName, true, callingUserId, callingUserId)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
@@ -32,7 +32,7 @@ func CreateUserGroup(ctx context.Context, db Database, callingUserId, userGroupI
 			tracer.CaptureException(dbErr)
 			return nil, dbErr
 		}
-		user = &row
+		userGroup = &row
 	}
 	err = rows.Err()
 	if err != nil {
@@ -40,12 +40,12 @@ func CreateUserGroup(ctx context.Context, db Database, callingUserId, userGroupI
 		tracer.CaptureException(dbErr)
 		return nil, dbErr
 	}
-	if user == nil {
+	if userGroup == nil {
 		return nil, common.NewResourceNotFoundError(operation, "id", userGroupId)
 	}
 
 	db.GetLogger().Debugf("%s created 1 row", operation)
-	return user, nil
+	return userGroup, nil
 }
 
 func ListUserGroups(ctx context.Context, db Database) ([]*common.UserGroup, error) {

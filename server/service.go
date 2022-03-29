@@ -20,6 +20,15 @@ type Service interface {
 	DeleteUser(ctx context.Context, userId string) error
 	GetAccessToken(ctx context.Context) (*common.AccessToken, error)
 
+	// user groups
+	ListUserGroups(ctx context.Context) ([]*common.UserGroup, error)
+	GetUserGroup(ctx context.Context, userGroupId string) (*common.UserGroup, error)
+	ListUsersInGroup(ctx context.Context, userGroupId string) ([]*common.User, error)
+	CreateUserGroup(ctx context.Context, req *CreateUserGroupRequest) (*common.UserGroup, error)
+	DeleteUserGroup(ctx context.Context, userGroupId string) error
+	AddUserToGroup(ctx context.Context, req *UserGroupMemberRequest) error
+	RemoveUserFromGroup(ctx context.Context, req *UserGroupMemberRequest) error
+
 	// secrets
 	CreateSecret(ctx context.Context, key *CreateSecretRequest) (*common.Secret, error)
 	GetSecret(ctx context.Context, secretName string) (*common.Secret, error)
@@ -159,6 +168,67 @@ func (s *service) GetAccessToken(ctx context.Context) (*common.AccessToken, erro
 	}
 	s.deps.AccessTokens.Add(tokenId, token)
 	return token, nil
+}
+
+func (s *service) ListUserGroups(ctx context.Context) ([]*common.UserGroup, error) {
+	return database.ListUserGroups(ctx, s.deps.Database)
+}
+
+func (s *service) GetUserGroup(ctx context.Context, userGroupId string) (*common.UserGroup, error) {
+	return database.GetUserGroup(ctx, s.deps.Database, userGroupId)
+}
+
+func (s *service) ListUsersInGroup(ctx context.Context, userGroupId string) ([]*common.User, error) {
+	return database.ListUsersInGroup(ctx, s.deps.Database, userGroupId)
+}
+
+func (s *service) DeleteUserGroup(ctx context.Context, userGroupId string) error {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	err = database.DeleteUserGroup(ctx, s.deps.Database, user.Id, userGroupId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *service) CreateUserGroup(ctx context.Context, req *CreateUserGroupRequest) (*common.UserGroup, error) {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userGroup, err := database.CreateUserGroup(ctx, s.deps.Database, user.Id, common.GenUuid(), req.Name)
+	if err != nil {
+		return nil, err
+	}
+	userGroup.StatusCode = 201
+	return userGroup, nil
+}
+
+func (s *service) AddUserToGroup(ctx context.Context, req *UserGroupMemberRequest) error {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	err = database.CreateUserGroupMember(ctx, s.deps.Database, user.Id, req.UserGroupId, req.UserId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *service) RemoveUserFromGroup(ctx context.Context, req *UserGroupMemberRequest) error {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	err = database.DeleteUserGroupMemer(ctx, s.deps.Database, user.Id, req.UserGroupId, req.UserId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequest) (*common.Secret, error) {

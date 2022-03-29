@@ -34,7 +34,7 @@ func createSecretEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  decodeCreateSecretRequest,
-		method:   "POST",
+		method:   HTTP_POST,
 		path:     "/secrets",
 	}
 }
@@ -51,7 +51,7 @@ func getSecretEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  decodeRequestUrlName(op),
-		method:   "GET",
+		method:   HTTP_GET,
 		path:     "/secrets/{name}",
 	}
 }
@@ -68,7 +68,7 @@ func deleteSecretEndpoint(s Service) endpointBuilder {
 	return endpointBuilder{
 		endpoint: e,
 		decoder:  decodeRequestUrlName(op),
-		method:   "DELETE",
+		method:   HTTP_DELETE,
 		path:     "/secrets/{name}",
 	}
 }

@@ -59,7 +59,7 @@ func EndpointClientAuthenticationWrapper(e endpoint.Endpoint, op string, deps *d
 }
 
 // EndpointAccessTokenAuthenticationWrapper validates request authentication by access token
-func EndpointAccessTokenAuthenticationWrapper(e endpoint.Endpoint, op string, deps *dependencies.Dependencies) endpoint.Endpoint {
+func EndpointAccessTokenAuthenticationWrapper(e endpoint.Endpoint, op string, deps *dependencies.Dependencies, checkAdmin bool) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		tracer := deps.Tracer(ctx, op)
 		defer tracer.Close()
@@ -84,6 +84,12 @@ func EndpointAccessTokenAuthenticationWrapper(e endpoint.Endpoint, op string, de
 		user := deps.AuthUsers.Get(accessToken.UserId)
 		if user == nil {
 			internalError := fmt.Errorf("User not found for accessToken %s", authToken)
+			tracer.CaptureException(internalError)
+			deps.Logger.Errorf("Error authenticating %s: %v", op, internalError)
+			return nil, common.NewAuthorizationError()
+		}
+		if checkAdmin && user.Type != "admin" {
+			internalError := fmt.Errorf("User %s is not an admin.", user.Id)
 			tracer.CaptureException(internalError)
 			deps.Logger.Errorf("Error authenticating %s: %v", op, internalError)
 			return nil, common.NewAuthorizationError()
