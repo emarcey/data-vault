@@ -30,6 +30,7 @@ type Service interface {
 	RemoveUserFromGroup(ctx context.Context, req *UserGroupMemberRequest) error
 
 	// secrets
+	ListSecrets(ctx context.Context) ([]*common.Secret, error)
 	CreateSecret(ctx context.Context, key *CreateSecretRequest) (*common.Secret, error)
 	GetSecret(ctx context.Context, secretName string) (*common.Secret, error)
 	DeleteSecret(ctx context.Context, secretName string) error
@@ -229,6 +230,14 @@ func (s *service) RemoveUserFromGroup(ctx context.Context, req *UserGroupMemberR
 		return err
 	}
 	return nil
+}
+
+func (s *service) ListSecrets(ctx context.Context) ([]*common.Secret, error) {
+	user, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return database.ListSecrets(ctx, s.deps.Database, user)
 }
 
 func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequest) (*common.Secret, error) {

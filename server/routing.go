@@ -72,6 +72,7 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 
 	accessTokenEndpoints := []endpointBuilder{
 		listUsersEndpoint(s),
+		listSecretsEndpoint(s),
 		createSecretEndpoint(s),
 		getSecretEndpoint(s),
 		createSecretPermissionEndpoint(s),

@@ -72,3 +72,15 @@ func deleteSecretEndpoint(s Service) endpointBuilder {
 		path:     "/secrets/{name}",
 	}
 }
+
+func listSecretsEndpoint(s Service) endpointBuilder {
+	e := func(ctx context.Context, _ interface{}) (interface{}, error) {
+		return s.ListSecrets(ctx)
+	}
+	return endpointBuilder{
+		endpoint: e,
+		decoder:  noOpDecodeRequest,
+		method:   HTTP_GET,
+		path:     "/secrets",
+	}
+}

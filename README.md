@@ -260,6 +260,22 @@ On success, this returns:
 
 **Note: Secret operations are performed against secret name rather than ID, as storing a separate secret ID in someone else's DB just seems like a waste of energy**
 
+1. List
+	* Method: GET
+	* URI: `/secrets`
+	* Response: list of secrets; value will be empty
+		```json
+		[
+			{
+			    "id": "c13dc88b-9563-43d8-bb70-81cb7f5af675",
+			    "name": "my-key4",
+			    "value": " ",
+			    "description": "something",
+			    "created_by": "admin",
+			    "updated_by": "admin"
+			}
+		]
+		```
 1. Get
 	* Method: GET
 	* URI: `/secrets/{secretName}`
@@ -341,6 +357,8 @@ Used to add read permissions for a user or group.
 * Extended support for interfaces
 	* Datadog for tracing support
 	* Other data stores for secret manager/db
+* Improve API
+	* Pagination
 * Better dev tools
 * Automated tests
 
