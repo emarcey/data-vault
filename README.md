@@ -23,14 +23,14 @@ Developer users have the ability to:
 1. Create a key-value pair
 1. Fetch a key-value pair for keys they have created or to which they have been granted access
 1. Grant/Revoke permissions on keys they have created to other users
-1. List users
+1. List users/user groups
 
 Admins have extended permissions. In addition to create/fetch, they have the ability to
 
 1. Delete a key-value pair
 1. Grant/Revoke permissions on any keys
-1. Create new users
-1. Delete users
+1. Create/Delete users
+1. Create/Delete user groups & add/remove users to/from groups
 
 
 All API interactions with the key-value store (fetch, create, delete) are additionally logged in the secrets datastore (MongoDB implementation provided). The MongoDB implementation is structured for a time-series collection keyed on user ID.
