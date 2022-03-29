@@ -52,7 +52,7 @@ With the headers:
 ```json
 {
 	"Client-ID": "03b6f72c-f3f4-43d9-a705-17b326924d74",
-	"Client-Secret": "9e5d5da6-24ed-42a9-a105-c531bed8175d",
+	"Client-Secret": "9e5d5da6-24ed-42a9-a105-c531bed8175d"
 }
 ```
 
@@ -84,7 +84,7 @@ With the headers:
 ```json
 {
 	"Client-ID": "03b6f72c-f3f4-43d9-a705-17b326924d74",
-	"Client-Secret": "9e5d5da6-24ed-42a9-a105-c531bed8175d",
+	"Client-Secret": "9e5d5da6-24ed-42a9-a105-c531bed8175d"
 }
 ```
 
@@ -93,7 +93,7 @@ On success, this returns:
 ```json
 {
 	"Client-ID": "03b6f72c-f3f4-43d9-a705-17b326924d74",
-	"Client-Secret": "29a52d35-d8d5-4ead-ac4a-90dba908ecaa",
+	"Client-Secret": "29a52d35-d8d5-4ead-ac4a-90dba908ecaa"
 }
 ```
 
@@ -152,10 +152,92 @@ On success, this returns:
 	* Response: None, if successful
 	* Note: Delete is soft delete, so record will be inaccessible, but not deleted from the database entirely.
 
+### User Groups
+
+**Note: All User Group Endpoints except List are currently Admin-Only**
+
+1. List
+	* Method: GET
+	* URI: `/user-groups`
+	* Response: List of User Group objects
+		```json
+		[
+			{
+	        	"id": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+		        "name": "admin"
+	    	}
+	    ]
+		```
+1. Get
+	* Method: GET
+	* URI: `/user-groups/{userGroupId}`
+	* Response: Single User Group object
+		```json
+		{
+	        "id": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+	        "name": "admin"
+	    }
+		```
+1. Create
+	* Method: POST
+	* URI: `/user-groups`
+	* Request:
+		```json
+		{
+	        "name": "new user group1"
+	    }
+		```
+	* Response: Single User Group object
+		```json
+		{
+	        "id": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+	        "name": "new user group1"
+	    }
+		```
+1. Delete
+	* Method: DELETE
+	* URI: `/user-groups/{userGroupId}`
+	* Response: None, if successful
+	* Note: Delete is soft delete, so record will be inaccessible, but not deleted from the database entirely.
+1. List Users in Group
+	* Method: GET
+	* URI: `user-groups/{userGroupId}/users`
+	* Response: List of User objects
+		```json
+		[
+			{
+	        	"id": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+		        "name": "admin",
+		        "is_active": true,
+		        "type": "admin"
+	    	}
+	    ]
+		```
+1. Add Users to Group
+	* Method: POST
+	* URI: `user-groups/{userGroupId}/users`
+	* Request:
+		```json
+		{
+			"user_id": "03b6f72c-f3f4-43d9-a705-17b326924d74"
+		}
+		```
+	* Response: None, if successful
+1. Remove Users from Group
+	* Method: DELETE
+	* URI: `user-groups/{userGroupId}/users`
+	* Request:
+		```json
+		{
+			"user_id": "03b6f72c-f3f4-43d9-a705-17b326924d74"
+		}
+		```
+	* Response: None, if successful
+	* Note: Delete is soft delete, so record will be inaccessible, but not deleted from the database entirely.
+
 ### Secrets
 
 **Note: Secret operations are performed against secret name rather than ID, as storing a separate secret ID in someone else's DB just seems like a waste of energy**
-
 
 1. Get
 	* Method: GET
@@ -203,13 +285,18 @@ On success, this returns:
 
 ### Secret Permissions
 
+Used to add read permissions for a user or group.
+
+**Note: if both user_id and user_group_id are set in the request, will return an error**
+
 1. Create
 	* Method: POST
 	* URI: `/secrets/{secretName}/permissions`
 	* Request:
 		```json
 		{
-			"user_id": "c13dc88b-9563-43d8-bb70-81cb7f5af675"
+			"user_id": "c13dc88b-9563-43d8-bb70-81cb7f5af675",
+			"user_group_id": "c13dc88b-9563-43d8-bb70-81cb7f5af675"
 		}
 		```
 	* Response: None, if successful
@@ -219,7 +306,8 @@ On success, this returns:
 	* Request:
 		```json
 		{
-			"user_id": "c13dc88b-9563-43d8-bb70-81cb7f5af675"
+			"user_id": "c13dc88b-9563-43d8-bb70-81cb7f5af675",
+			"user_group_id": "c13dc88b-9563-43d8-bb70-81cb7f5af675"
 		}
 		```
 	* Response: None, if successful
@@ -228,7 +316,6 @@ On success, this returns:
 ## Roadmap
 
 * Improved permissioning
-	* Implement user groups for blanket access
 	* Wildcard-based access
 * Extended support for interfaces
 	* Datadog for tracing support

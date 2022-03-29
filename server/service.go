@@ -317,12 +317,13 @@ func (s *service) DeleteSecret(ctx context.Context, secretName string) error {
 }
 
 func (s *service) GrantPermission(ctx context.Context, req *SecretPermissionRequest) error {
+	op := "GrantPermission"
 	user, err := common.FetchUserFromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = s.deps.SecretsManager.LogAccess(ctx, common.NewAccessLog(user.Id, "DeletePermission", req.SecretName))
+	err = s.deps.SecretsManager.LogAccess(ctx, common.NewAccessLog(user.Id, op, req.SecretName))
 	if err != nil {
 		return err
 	}
@@ -332,10 +333,17 @@ func (s *service) GrantPermission(ctx context.Context, req *SecretPermissionRequ
 		return err
 	}
 
-	return database.CreateSecretPermission(ctx, s.deps.Database, user.Id, req.UserId, secretId)
+	if req.UserId != "" && req.UserGroupId != "" {
+		return common.NewInvalidParamsError(op, "Expected either user id or user group id. Got both: %+v", req)
+	}
+	if req.UserId != "" {
+		return database.CreateSecretPermission(ctx, s.deps.Database, user.Id, req.UserId, secretId)
+	}
+	return database.CreateSecretGroupPermission(ctx, s.deps.Database, user.Id, req.UserGroupId, secretId)
 }
 
 func (s *service) RevokePermission(ctx context.Context, req *SecretPermissionRequest) error {
+	op := "RevokePermission"
 	user, err := common.FetchUserFromContext(ctx)
 	if err != nil {
 		return err
@@ -350,5 +358,11 @@ func (s *service) RevokePermission(ctx context.Context, req *SecretPermissionReq
 	if err != nil {
 		return err
 	}
-	return database.DeleteSecretPermission(ctx, s.deps.Database, user.Id, req.UserId, secretId)
+	if req.UserId != "" && req.UserGroupId != "" {
+		return common.NewInvalidParamsError(op, "Expected either user id or user group id. Got both: %+v", req)
+	}
+	if req.UserId != "" {
+		return database.DeleteSecretPermission(ctx, s.deps.Database, user.Id, req.UserId, secretId)
+	}
+	return database.DeleteSecretGroupPermission(ctx, s.deps.Database, user.Id, req.UserGroupId, secretId)
 }

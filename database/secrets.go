@@ -38,7 +38,7 @@ func GetSecretByName(ctx context.Context, db Database, user *common.User, secret
 	defer tracer.Close()
 
 	query := `
-	SELECT	s.id,
+	SELECT	DISTINCT s.id,
 			s.name,
 			s.value,
 			s.description,
@@ -51,11 +51,15 @@ func GetSecretByName(ctx context.Context, db Database, user *common.User, secret
 		ON 	s.updated_by = updated_by_user.id
 	LEFT JOIN admin.secret_permissions sp
 		ON sp.secret_id = s.id AND sp.user_id = $1 AND sp.is_active
-	WHERE	s.name = $2
+	LEFT JOIN admin.user_group_members ugm
+		ON 	ugm.user_id = $2 AND ugm.is_active
+	LEFT JOIN admin.secret_group_permissions sgp
+		ON sgp.secret_id = s.id AND sgp.user_group_id = ugm.user_group_id AND sgp.is_active
+	WHERE	s.name = $3
 		AND s.is_active
-		AND (sp.id IS NOT NULL OR $3 OR s.created_by = $4)
+		AND (sp.id IS NOT NULL OR $4 OR s.created_by = $5 OR sgp.id IS NOT NULL)
 	`
-	rows, err := db.QueryContext(tracer.Context(), query, user.Id, secretName, user.IsAdmin(), user.Id)
+	rows, err := db.QueryContext(tracer.Context(), query, user.Id, user.Id, secretName, user.IsAdmin(), user.Id)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)

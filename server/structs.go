@@ -29,8 +29,9 @@ type CreateSecretRequest struct {
 }
 
 type SecretPermissionRequest struct {
-	SecretName string `json:"-"`
-	UserId     string `json:"user_id"`
+	SecretName  string `json:"-"`
+	UserId      string `json:"user_id"`
+	UserGroupId string `json:"user_group_id"`
 }
 
 type UserGroupMemberRequest struct {
