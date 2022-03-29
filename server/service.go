@@ -358,7 +358,7 @@ func (s *service) RevokePermission(ctx context.Context, req *SecretPermissionReq
 		return err
 	}
 
-	err = s.deps.SecretsManager.LogAccess(ctx, common.NewAccessLog(user.Id, "RevokePermission", req.SecretName))
+	err = s.deps.SecretsManager.LogAccess(ctx, common.NewAccessLog(user.Id, op, req.SecretName))
 	if err != nil {
 		return err
 	}
