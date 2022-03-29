@@ -48,7 +48,7 @@ func CreateUserGroup(ctx context.Context, db Database, callingUserId, userGroupI
 	return userGroup, nil
 }
 
-func ListUserGroups(ctx context.Context, db Database) ([]*common.UserGroup, error) {
+func ListUserGroups(ctx context.Context, db Database, pageSize, offset int) ([]*common.UserGroup, error) {
 	operation := "ListUserGroups"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
@@ -58,8 +58,10 @@ func ListUserGroups(ctx context.Context, db Database) ([]*common.UserGroup, erro
 			u.name
 	FROM	admin.user_groups u
 	WHERE	u.is_active
+	LIMIT	$1
+	OFFSET 	$2
 	`
-	rows, err := db.QueryContext(tracer.Context(), query)
+	rows, err := db.QueryContext(tracer.Context(), query, pageSize, offset)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)

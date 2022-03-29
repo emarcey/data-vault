@@ -9,6 +9,23 @@ import (
 	"emarcey/data-vault/common"
 )
 
+func listSecretsEndpoint(s Service) endpointBuilder {
+	op := "ListSecrets"
+	e := func(ctx context.Context, reqInterface interface{}) (interface{}, error) {
+		req, ok := reqInterface.(*PaginationRequest)
+		if !ok {
+			return nil, common.NewInvalidParamsError(op, "Expected request of type *PaginationRequest. Got %T", reqInterface)
+		}
+		return s.ListSecrets(ctx, req)
+	}
+	return endpointBuilder{
+		endpoint: e,
+		decoder:  decodePaginationRequest(op),
+		method:   HTTP_GET,
+		path:     "/secrets",
+	}
+}
+
 func decodeCreateSecretRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -70,17 +87,5 @@ func deleteSecretEndpoint(s Service) endpointBuilder {
 		decoder:  decodeRequestUrlName(op),
 		method:   HTTP_DELETE,
 		path:     "/secrets/{name}",
-	}
-}
-
-func listSecretsEndpoint(s Service) endpointBuilder {
-	e := func(ctx context.Context, _ interface{}) (interface{}, error) {
-		return s.ListSecrets(ctx)
-	}
-	return endpointBuilder{
-		endpoint: e,
-		decoder:  noOpDecodeRequest,
-		method:   HTTP_GET,
-		path:     "/secrets",
 	}
 }

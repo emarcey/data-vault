@@ -9,6 +9,7 @@
 	- [Authentication](#authentication)
 		- [Access Token](#access-token)
 		- [Client Secret](#client-secret)
+	- [Pagination](#pagination)
 	- [Users](#users)
 	- [User Groups](#user-groups)
 	- [Secrets](#secrets)
@@ -117,6 +118,16 @@ On success, this returns:
 	"Client-Secret": "29a52d35-d8d5-4ead-ac4a-90dba908ecaa"
 }
 ```
+
+### Pagination
+
+All `List` endpoints support limit/offset pagination.
+
+Call the endpoints with the URL Query Parameters `pageSize` and `offset`, like:
+
+`GET {base_url}/users?pageSize=10&offset=0`
+
+If not set, page size will default to 10 and offset will default to 0.
 
 ### Users
 
@@ -356,8 +367,6 @@ Used to add read permissions for a user or group.
 * Extended support for interfaces
 	* Datadog for tracing support
 	* Other data stores for secret manager/db
-* Improve API
-	* Pagination
 * Better dev tools
 * Automated tests
 

@@ -13,7 +13,7 @@ type Service interface {
 	Version() string
 
 	// users
-	ListUsers(ctx context.Context) ([]*common.User, error)
+	ListUsers(ctx context.Context, req *PaginationRequest) ([]*common.User, error)
 	GetUser(ctx context.Context, userId string) (*common.User, error)
 	CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error)
 	RotateUserSecret(ctx context.Context) (*CreateUserResponse, error)
@@ -21,16 +21,16 @@ type Service interface {
 	GetAccessToken(ctx context.Context) (*common.AccessToken, error)
 
 	// user groups
-	ListUserGroups(ctx context.Context) ([]*common.UserGroup, error)
+	ListUserGroups(ctx context.Context, req *PaginationRequest) ([]*common.UserGroup, error)
 	GetUserGroup(ctx context.Context, userGroupId string) (*common.UserGroup, error)
-	ListUsersInGroup(ctx context.Context, userGroupId string) ([]*common.User, error)
+	ListUsersInGroup(ctx context.Context, req *ListUsersInGroupRequest) ([]*common.User, error)
 	CreateUserGroup(ctx context.Context, req *CreateUserGroupRequest) (*common.UserGroup, error)
 	DeleteUserGroup(ctx context.Context, userGroupId string) error
 	AddUserToGroup(ctx context.Context, req *UserGroupMemberRequest) error
 	RemoveUserFromGroup(ctx context.Context, req *UserGroupMemberRequest) error
 
 	// secrets
-	ListSecrets(ctx context.Context) ([]*common.Secret, error)
+	ListSecrets(ctx context.Context, req *PaginationRequest) ([]*common.Secret, error)
 	CreateSecret(ctx context.Context, key *CreateSecretRequest) (*common.Secret, error)
 	GetSecret(ctx context.Context, secretName string) (*common.Secret, error)
 	DeleteSecret(ctx context.Context, secretName string) error
@@ -55,8 +55,8 @@ func (s *service) Version() string {
 	return s.version
 }
 
-func (s *service) ListUsers(ctx context.Context) ([]*common.User, error) {
-	return database.ListUsers(ctx, s.deps.Database)
+func (s *service) ListUsers(ctx context.Context, req *PaginationRequest) ([]*common.User, error) {
+	return database.ListUsers(ctx, s.deps.Database, req.PageSize, req.Offset)
 }
 
 func (s *service) GetUser(ctx context.Context, userId string) (*common.User, error) {
@@ -171,16 +171,16 @@ func (s *service) GetAccessToken(ctx context.Context) (*common.AccessToken, erro
 	return token, nil
 }
 
-func (s *service) ListUserGroups(ctx context.Context) ([]*common.UserGroup, error) {
-	return database.ListUserGroups(ctx, s.deps.Database)
+func (s *service) ListUserGroups(ctx context.Context, req *PaginationRequest) ([]*common.UserGroup, error) {
+	return database.ListUserGroups(ctx, s.deps.Database, req.PageSize, req.Offset)
 }
 
 func (s *service) GetUserGroup(ctx context.Context, userGroupId string) (*common.UserGroup, error) {
 	return database.GetUserGroup(ctx, s.deps.Database, userGroupId)
 }
 
-func (s *service) ListUsersInGroup(ctx context.Context, userGroupId string) ([]*common.User, error) {
-	return database.ListUsersInGroup(ctx, s.deps.Database, userGroupId)
+func (s *service) ListUsersInGroup(ctx context.Context, req *ListUsersInGroupRequest) ([]*common.User, error) {
+	return database.ListUsersInGroup(ctx, s.deps.Database, req.UserGroupId, req.PageSize, req.Offset)
 }
 
 func (s *service) DeleteUserGroup(ctx context.Context, userGroupId string) error {
@@ -232,12 +232,12 @@ func (s *service) RemoveUserFromGroup(ctx context.Context, req *UserGroupMemberR
 	return nil
 }
 
-func (s *service) ListSecrets(ctx context.Context) ([]*common.Secret, error) {
+func (s *service) ListSecrets(ctx context.Context, req *PaginationRequest) ([]*common.Secret, error) {
 	user, err := common.FetchUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return database.ListSecrets(ctx, s.deps.Database, user)
+	return database.ListSecrets(ctx, s.deps.Database, user, req.PageSize, req.Offset)
 }
 
 func (s *service) CreateSecret(ctx context.Context, createArgs *CreateSecretRequest) (*common.Secret, error) {

@@ -10,12 +10,17 @@ import (
 )
 
 func listUserGroupsEndpoint(s Service) endpointBuilder {
-	e := func(ctx context.Context, _ interface{}) (interface{}, error) {
-		return s.ListUserGroups(ctx)
+	op := "ListUserGroups"
+	e := func(ctx context.Context, reqInterface interface{}) (interface{}, error) {
+		req, ok := reqInterface.(*PaginationRequest)
+		if !ok {
+			return nil, common.NewInvalidParamsError(op, "Expected request of type *PaginationRequest. Got %T", reqInterface)
+		}
+		return s.ListUserGroups(ctx, req)
 	}
 	return endpointBuilder{
 		endpoint: e,
-		decoder:  noOpDecodeRequest,
+		decoder:  decodePaginationRequest(op),
 		method:   HTTP_GET,
 		path:     "/user-groups",
 	}
@@ -55,18 +60,43 @@ func deleteUserGroupEndpoint(s Service) endpointBuilder {
 	}
 }
 
+func decodeListUsersInGroupRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	op := "ListUsersInGroup"
+	idInterface, err := decodeRequestUrlId(op)(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	id, ok := idInterface.(string)
+	if !ok {
+		return nil, common.NewInvalidParamsError(op, "Expected id of type string, got %T", idInterface)
+	}
+	paginationInterface, err := decodePaginationRequest(op)(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	pagination, ok := paginationInterface.(*PaginationRequest)
+	if !ok {
+		return nil, common.NewInvalidParamsError(op, "Expected pagination of type *PaginationRequest, got %T", paginationInterface)
+	}
+	return &ListUsersInGroupRequest{
+		UserGroupId: id,
+		PageSize:    pagination.PageSize,
+		Offset:      pagination.Offset,
+	}, nil
+}
+
 func listUsersInGroupEndpoint(s Service) endpointBuilder {
 	op := "ListUsersInGroup"
-	e := func(ctx context.Context, userGroupIdInterface interface{}) (interface{}, error) {
-		userGroupId, ok := userGroupIdInterface.(string)
+	e := func(ctx context.Context, reqInterface interface{}) (interface{}, error) {
+		req, ok := reqInterface.(*ListUsersInGroupRequest)
 		if !ok {
-			return nil, common.NewInvalidParamsError(op, "Expected user group ID of type string. Got %T", userGroupIdInterface)
+			return nil, common.NewInvalidParamsError(op, "Expected request of type *ListUsersInGroupRequest. Got %T", reqInterface)
 		}
-		return s.ListUsersInGroup(ctx, userGroupId)
+		return s.ListUsersInGroup(ctx, req)
 	}
 	return endpointBuilder{
 		endpoint: e,
-		decoder:  decodeRequestUrlId(op),
+		decoder:  decodeListUsersInGroupRequest,
 		method:   HTTP_GET,
 		path:     "/user-groups/{id}/users",
 	}

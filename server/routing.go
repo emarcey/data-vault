@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -96,6 +97,41 @@ func decodeRequestUrlId(op string) httptransport.DecodeRequestFunc {
 			return nil, common.NewInvalidParamsError(op, "Id not found")
 		}
 		return id, nil
+	}
+}
+
+func parseIntegerUrlParam(op string, urlParams map[string][]string, paramName string, defaultValue int) (int, error) {
+	param, ok := urlParams[paramName]
+	if !ok {
+		return defaultValue, nil
+	}
+	if len(param) != 1 {
+		return -1, common.NewInvalidParamsError(op, "Expected single integer value for %v, got %v", paramName, param)
+	}
+	paramInt, err := strconv.Atoi(param[0])
+	if err != nil || paramInt < 0 {
+		return -1, common.NewInvalidParamsError(op, "Expected single integer value for %v, got %v", paramName, param)
+	}
+	return paramInt, nil
+}
+
+func decodePaginationRequest(op string) httptransport.DecodeRequestFunc {
+	return func(_ context.Context, r *http.Request) (interface{}, error) {
+		urlParams := r.URL.Query()
+		pageSize, err := parseIntegerUrlParam(op, urlParams, "pageSize", 10)
+		if err != nil {
+			return nil, err
+		}
+
+		offset, err := parseIntegerUrlParam(op, urlParams, "offset", 0)
+		if err != nil {
+			return nil, err
+		}
+
+		return &PaginationRequest{
+			PageSize: pageSize,
+			Offset:   offset,
+		}, nil
 	}
 }
 

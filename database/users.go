@@ -49,7 +49,7 @@ func SelectUsersForAuth(ctx context.Context, db Database) (map[string]*common.Us
 	return userMap, nil
 }
 
-func ListUsers(ctx context.Context, db Database) ([]*common.User, error) {
+func ListUsers(ctx context.Context, db Database, pageSize, offset int) ([]*common.User, error) {
 	operation := "ListUsers"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
@@ -61,8 +61,10 @@ func ListUsers(ctx context.Context, db Database) ([]*common.User, error) {
 			u.type
 	FROM	admin.users u
 	WHERE	u.is_active
+	LIMIT	$1
+	OFFSET 	$2
 	`
-	rows, err := db.QueryContext(tracer.Context(), query)
+	rows, err := db.QueryContext(tracer.Context(), query, pageSize, offset)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
@@ -91,7 +93,7 @@ func ListUsers(ctx context.Context, db Database) ([]*common.User, error) {
 	return users, nil
 }
 
-func ListUsersInGroup(ctx context.Context, db Database, userGroupId string) ([]*common.User, error) {
+func ListUsersInGroup(ctx context.Context, db Database, userGroupId string, pageSize, offset int) ([]*common.User, error) {
 	operation := "ListUsersInGroup"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
@@ -110,8 +112,10 @@ func ListUsersInGroup(ctx context.Context, db Database, userGroupId string) ([]*
 		AND ug.is_active
 		AND ug.id = $1
 	WHERE	u.is_active
+	LIMIT 	$2
+	OFFSET 	$3
 	`
-	rows, err := db.QueryContext(tracer.Context(), query, userGroupId)
+	rows, err := db.QueryContext(tracer.Context(), query, userGroupId, pageSize, offset)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)

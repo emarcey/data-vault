@@ -91,7 +91,7 @@ func GetSecretByName(ctx context.Context, db Database, user *common.User, secret
 	return secret, nil
 }
 
-func ListSecrets(ctx context.Context, db Database, user *common.User) ([]*common.Secret, error) {
+func ListSecrets(ctx context.Context, db Database, user *common.User, pageSize, offset int) ([]*common.Secret, error) {
 	operation := "ListSecrets"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
@@ -115,8 +115,10 @@ func ListSecrets(ctx context.Context, db Database, user *common.User) ([]*common
 		ON sgp.secret_id = s.id AND sgp.user_group_id = ugm.user_group_id AND sgp.is_active
 	WHERE	s.is_active
 		AND (sp.id IS NOT NULL OR $3 OR s.created_by = $4 OR sgp.id IS NOT NULL)
+	LIMIT 	$5
+	OFFSET 	$6
 	`
-	rows, err := db.QueryContext(tracer.Context(), query, user.Id, user.Id, user.IsAdmin(), user.Id)
+	rows, err := db.QueryContext(tracer.Context(), query, user.Id, user.Id, user.IsAdmin(), user.Id, pageSize, offset)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)

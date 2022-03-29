@@ -10,12 +10,17 @@ import (
 )
 
 func listUsersEndpoint(s Service) endpointBuilder {
-	e := func(ctx context.Context, _ interface{}) (interface{}, error) {
-		return s.ListUsers(ctx)
+	op := "ListUsers"
+	e := func(ctx context.Context, reqInterface interface{}) (interface{}, error) {
+		req, ok := reqInterface.(*PaginationRequest)
+		if !ok {
+			return nil, common.NewInvalidParamsError(op, "Expected request of type *PaginationRequest. Got %T", reqInterface)
+		}
+		return s.ListUsers(ctx, req)
 	}
 	return endpointBuilder{
 		endpoint: e,
-		decoder:  noOpDecodeRequest,
+		decoder:  decodePaginationRequest(op),
 		method:   HTTP_GET,
 		path:     "/users",
 	}
