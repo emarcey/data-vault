@@ -102,10 +102,10 @@ func ListUsersInGroup(ctx context.Context, db Database, userGroupId string) ([]*
 			u.is_active,
 			u.type
 	FROM	admin.users u
-	JOIN	user_group_members ugm
+	JOIN	admin.user_group_members ugm
 		ON 	u.id = ugm.user_id
 		AND ugm.is_active
-	JOIN	user_groups ug
+	JOIN	admin.user_groups ug
 		ON 	ugm.user_group_id = ug.id
 		AND ug.is_active
 		AND ug.id = $1

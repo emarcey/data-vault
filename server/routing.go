@@ -56,10 +56,8 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		deleteUserEndpoint(s),
 		createUserEndpoint(s),
 		deleteSecretEndpoint(s),
-		listUserGroupsEndpoint(s),
 		getUserGroupEndpoint(s),
 		deleteUserGroupEndpoint(s),
-		listUsersInGroupEndpoint(s),
 		createUserGroupEndpoint(s),
 		addUserToGroupEndpoint(s),
 		removeUserFromGroupEndpoint(s),
@@ -78,6 +76,8 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		getSecretEndpoint(s),
 		createSecretPermissionEndpoint(s),
 		deleteSecretPermissionEndpoint(s),
+		listUserGroupsEndpoint(s),
+		listUsersInGroupEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleTokenEndpoints, accessTokenEndpoints, encodeResponse, options...)
 	return r

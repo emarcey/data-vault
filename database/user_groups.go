@@ -12,7 +12,7 @@ func CreateUserGroup(ctx context.Context, db Database, callingUserId, userGroupI
 	defer tracer.Close()
 
 	query := `
-	INSERT INTO  admin.user_groupss (id, name, is_active, created_by, updated_by)
+	INSERT INTO  admin.user_groups (id, name, is_active, created_by, updated_by)
 	VALUES($1, $2, $3, $4, $5)
 	RETURNING id, name
 	`
@@ -56,7 +56,7 @@ func ListUserGroups(ctx context.Context, db Database) ([]*common.UserGroup, erro
 	query := `
 	SELECT	u.id,
 			u.name
-	FROM	admin.users u
+	FROM	admin.user_groups u
 	WHERE	u.is_active
 	`
 	rows, err := db.QueryContext(tracer.Context(), query)
@@ -96,7 +96,7 @@ func GetUserGroup(ctx context.Context, db Database, userId string) (*common.User
 	query := `
 	SELECT	u.id,
 			u.name
-	FROM	admin.user_groupss u
+	FROM	admin.user_groups u
 	WHERE	id = $1
 		AND u.is_active
 	`
