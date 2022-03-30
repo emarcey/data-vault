@@ -17,6 +17,7 @@ func DeleteSecretGroupPermission(ctx context.Context, db Database, callingUserId
 		updated_by = $1
 	WHERE	user_group_id = $2 and secret_id = $3
 	`
+
 	result, err := db.ExecContext(tracer.Context(), query, callingUserId, userGroupId, secretId)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
