@@ -29,7 +29,8 @@ type TracerOpts struct {
 }
 
 func NewTracerCreator(logger *logrus.Logger, opts TracerOpts) (TracerCreator, error) {
-	if opts.TracerType == "sentry" {
+	switch opts.TracerType {
+	case "sentry":
 		tracer, err := NewSentryTracerMaker(sentry.ClientOptions{
 			Dsn: opts.SentryOpts.DSN,
 		})
@@ -37,7 +38,11 @@ func NewTracerCreator(logger *logrus.Logger, opts TracerOpts) (TracerCreator, er
 			return nil, common.NewInitializationError("tracer", err.Error())
 		}
 		return tracer, nil
+	case "local":
+		return NewLocalTracerMaker(logger), nil
+	case "noop", "":
+		return NewNoOpTracerMaker(), nil
+	default:
+		return nil, common.NewInitializationError("tracer", "Invalid tracer type: %v", opts.TracerType)
 	}
-
-	return NewLocalTracerMaker(logger), nil
 }

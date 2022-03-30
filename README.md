@@ -384,6 +384,7 @@ Used to add read permissions for a user or group.
 		* JSON logger
 * Tracer: agent that provides tracing for datastore/API access
 	* Currently supported:
+		* No Op. Literally does nothing
 		* Local tracer (basically just a logger)
 		* [Sentry.io](sentry.io)
 * Service:
