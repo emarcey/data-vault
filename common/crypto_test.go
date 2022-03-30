@@ -3,6 +3,8 @@ package common
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestHashSha256(t *testing.T) {
@@ -19,9 +21,8 @@ func TestGenRandBytesErrorCases(t *testing.T) {
 	for _, given := range tests {
 		t.Run(fmt.Sprintf("GenRandBytes - Error - %v", given), func(t *testing.T) {
 			out, err := GenRandBytes(given)
-			if err == nil || out != nil {
-				t.Errorf("Expected empty response and error. Got: %v %v", out, err)
-			}
+			require.NotNil(t, err, "Expected non-nil error")
+			require.Nil(t, out, "Expected out to be nil. Got: %v", out)
 		})
 	}
 }
@@ -32,9 +33,8 @@ func TestGenRandBytesSuccessCases(t *testing.T) {
 	for _, given := range tests {
 		t.Run(fmt.Sprintf("GenRandBytes - Success - %v", given), func(t *testing.T) {
 			out, err := GenRandBytes(given)
-			if err != nil || len(out) != given {
-				t.Errorf("Expected empty error and response of len %d. Got: %v %v", given, out, err)
-			}
+			require.Nil(t, err, "Expected err to be nil. Got: %v", err)
+			require.Equal(t, len(out), given, "Expected len(out) to be equal to given. Got %d and %d", len(out), given)
 		})
 	}
 }
@@ -45,9 +45,9 @@ func TestEncryptSecretErrorCases(t *testing.T) {
 	for _, given := range keySizes {
 		t.Run(fmt.Sprintf("EncryptSecret - Error - %v", given), func(t *testing.T) {
 			ciphertext, kv, err := EncryptSecret("id1", "hello", given)
-			if err == nil || ciphertext != "" || kv != nil {
-				t.Errorf("Expected empty response and error. Got: %v %v %v", ciphertext, kv, err)
-			}
+			require.NotNil(t, err, "Expected non-nil error")
+			require.Empty(t, ciphertext, "Expected ciphertext to be empty. Got: %v", ciphertext)
+			require.Nil(t, kv, "Expected kv to be nil. Got: %v", kv)
 		})
 	}
 }
@@ -58,9 +58,8 @@ func TestDecryptSecretErrorCases(t *testing.T) {
 	for _, given := range keySizes {
 		t.Run(fmt.Sprintf("DecryptSecret - Error - %v", given), func(t *testing.T) {
 			plaintext, err := DecryptSecret("id1", given)
-			if err == nil || plaintext != "" {
-				t.Errorf("Expected empty response and error. Got: %v %v", plaintext, err)
-			}
+			require.NotNil(t, err, "Expected non-nil error")
+			require.Empty(t, plaintext, "Expected plaintext to be empty. Got: %v", plaintext)
 		})
 	}
 }
@@ -70,26 +69,12 @@ func TestEncryptDecrypt(t *testing.T) {
 	givenId := "id1"
 
 	ciphertext, secret, err := EncryptSecret(givenId, givenValue, KEY_SIZE)
-	if err != nil {
-		t.Errorf("Unexpected error in EncryptSecret: %v", err)
-		return
-	}
-	if ciphertext == givenValue {
-		t.Error("Ciphertext was not transformed")
-		return
-	}
-	if secret == nil {
-		t.Error("Encrypted secret is nil")
-		return
-	}
+	require.Nil(t, err, "Expected nil error at EncryptSecret. Got: %v", err)
+	require.NotEqual(t, ciphertext, givenValue, "Ciphertext was not transformed")
+	require.NotNil(t, secret, "Encrypted secret is nil")
 
 	plaintext, err := DecryptSecret(ciphertext, secret)
-	if err != nil {
-		t.Errorf("Unexpected error in DecryptSecret: %v", err)
-		return
-	}
+	require.Nil(t, err, "Expected nil error at DecryptSecret. Got: %v", err)
 
-	if plaintext != givenValue {
-		t.Errorf("Plaintext, %v, does not equal given, %v", plaintext, givenValue)
-	}
+	require.Equal(t, plaintext, givenValue, "Plaintext, %v, does not equal given, %v", plaintext, givenValue)
 }

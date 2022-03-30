@@ -89,14 +89,23 @@ func noOpDecodeRequest(_ context.Context, _ *http.Request) (interface{}, error) 
 	return nil, nil
 }
 
+func parseStringValue(op string, vars map[string]string, paramName string) (string, error) {
+	val, ok := vars[paramName]
+	if !ok {
+		return "", common.NewInvalidParamsError(op, "id not found", paramName)
+	}
+	return val, nil
+}
+
 func decodeRequestUrlId(op string) httptransport.DecodeRequestFunc {
 	return func(_ context.Context, r *http.Request) (interface{}, error) {
-		vars := mux.Vars(r)
-		id, ok := vars["id"]
-		if !ok {
-			return nil, common.NewInvalidParamsError(op, "Id not found")
-		}
-		return id, nil
+		return parseStringValue(op, mux.Vars(r), "id")
+	}
+}
+
+func decodeRequestUrlName(op string) httptransport.DecodeRequestFunc {
+	return func(_ context.Context, r *http.Request) (interface{}, error) {
+		return parseStringValue(op, mux.Vars(r), "name")
 	}
 }
 
@@ -132,17 +141,6 @@ func decodePaginationRequest(op string) httptransport.DecodeRequestFunc {
 			PageSize: pageSize,
 			Offset:   offset,
 		}, nil
-	}
-}
-
-func decodeRequestUrlName(op string) httptransport.DecodeRequestFunc {
-	return func(_ context.Context, r *http.Request) (interface{}, error) {
-		vars := mux.Vars(r)
-		id, ok := vars["name"]
-		if !ok {
-			return nil, common.NewInvalidParamsError(op, "Name not found")
-		}
-		return id, nil
 	}
 }
 
