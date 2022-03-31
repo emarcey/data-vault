@@ -369,6 +369,8 @@ Used to add read permissions for a user or group.
 	* Other data stores for secret manager/db
 * Better dev tools
 * Automated tests
+* Improve API
+	* Access Logs
 
 ## Components
 

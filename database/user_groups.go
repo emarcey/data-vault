@@ -90,7 +90,7 @@ func ListUserGroups(ctx context.Context, db Database, pageSize, offset int) ([]*
 	return userGroups, nil
 }
 
-func GetUserGroup(ctx context.Context, db Database, userId string) (*common.UserGroup, error) {
+func GetUserGroup(ctx context.Context, db Database, userGroupId string) (*common.UserGroup, error) {
 	operation := "GetUserGroup"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
@@ -102,7 +102,7 @@ func GetUserGroup(ctx context.Context, db Database, userId string) (*common.User
 	WHERE	id = $1
 		AND u.is_active
 	`
-	rows, err := db.QueryContext(tracer.Context(), query, userId)
+	rows, err := db.QueryContext(tracer.Context(), query, userGroupId)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
@@ -129,7 +129,7 @@ func GetUserGroup(ctx context.Context, db Database, userId string) (*common.User
 		return nil, dbErr
 	}
 	if user == nil {
-		return nil, common.NewResourceNotFoundError(operation, "id", userId)
+		return nil, common.NewResourceNotFoundError(operation, "id", userGroupId)
 	}
 	return user, nil
 }

@@ -16,7 +16,7 @@ type User struct {
 	IsActive   bool   `json:"is_active"`
 	Type       string `json:"type"`
 	SecretHash string `json:"-"`
-	StatusCode int    `json:"-"`
+	StatusCode int    `json:"-" faker:"-"`
 }
 
 func (u *User) IsAdmin() bool {
@@ -33,7 +33,7 @@ func (u *User) GetStatusCode() int {
 type UserGroup struct {
 	Id         string `json:"id"`
 	Name       string `json:"name"`
-	StatusCode int    `json:"-"`
+	StatusCode int    `json:"-" faker:"-"`
 }
 
 func (u *UserGroup) GetStatusCode() int {
@@ -48,7 +48,7 @@ type AccessToken struct {
 	UserId     string    `json:"client_id"`
 	InvalidAt  time.Time `json:"invalid_at"`
 	IsLatest   bool      `json:"is_latest"`
-	StatusCode int       `json:"-"`
+	StatusCode int       `json:"-" faker:"-"`
 }
 
 func (a *AccessToken) GetStatusCode() int {
@@ -65,7 +65,7 @@ type Secret struct {
 	Description string `json:"description"`
 	CreatedBy   string `json:"created_by"`
 	UpdatedBy   string `json:"updated_by"`
-	StatusCode  int    `json:"-"`
+	StatusCode  int    `json:"-" faker:"-"`
 }
 
 func (s *Secret) GetStatusCode() int {

@@ -15,7 +15,7 @@ func TestDeleteSecretPermissionErrors(t *testing.T) {
 			dbMock.mock.ExpectExec("UPDATE").WillReturnError(fmt.Errorf("Oh no!"))
 		},
 		func(dbMock *MockDatabase) {
-			dbMock.mock.ExpectExec("UPDATE").WillReturnError(nil).WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("zoop")))
+			dbMock.mock.ExpectExec("UPDATE").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("zoop")))
 		},
 	}
 
@@ -34,7 +34,7 @@ func TestDeleteSecretPermissionErrors(t *testing.T) {
 func TestDeleteSecretPermissionSuccesses(t *testing.T) {
 	var inits = []initFunc{
 		func(dbMock *MockDatabase) {
-			dbMock.mock.ExpectExec("UPDATE").WillReturnError(nil).WillReturnResult(sqlmock.NewResult(1, 1)).WithArgs("callingUserId", "userId", "secretId")
+			dbMock.mock.ExpectExec("UPDATE").WillReturnResult(sqlmock.NewResult(1, 1)).WithArgs("callingUserId", "userId", "secretId")
 		},
 	}
 
@@ -56,7 +56,7 @@ func TestCreateSecretPermissionErrors(t *testing.T) {
 			dbMock.mock.ExpectExec("INSERT").WillReturnError(fmt.Errorf("Oh no!"))
 		},
 		func(dbMock *MockDatabase) {
-			dbMock.mock.ExpectExec("INSERT").WillReturnError(nil).WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("zoop")))
+			dbMock.mock.ExpectExec("INSERT").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("zoop")))
 		},
 	}
 
@@ -75,7 +75,7 @@ func TestCreateSecretPermissionErrors(t *testing.T) {
 func TestCreateSecretPermissionSuccesses(t *testing.T) {
 	var inits = []initFunc{
 		func(dbMock *MockDatabase) {
-			dbMock.mock.ExpectExec("INSERT").WillReturnError(nil).WillReturnResult(sqlmock.NewResult(1, 1)).WithArgs("userId", "secretId", "callingUserId", "callingUserId")
+			dbMock.mock.ExpectExec("INSERT").WillReturnResult(sqlmock.NewResult(1, 1)).WithArgs("userId", "secretId", "callingUserId", "callingUserId")
 		},
 	}
 

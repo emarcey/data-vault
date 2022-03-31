@@ -6,8 +6,8 @@ import (
 	"emarcey/data-vault/common"
 )
 
-func DeleteUserGroupMemer(ctx context.Context, db Database, callingUserId, userGroupId, userId string) error {
-	operation := "DeleteUserGroupMemer"
+func DeleteUserGroupMember(ctx context.Context, db Database, callingUserId, userGroupId, userId string) error {
+	operation := "DeleteUserGroupMember"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 

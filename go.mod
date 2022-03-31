@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/bxcodec/faker/v3 v3.8.0
 	github.com/getsentry/sentry-go v0.11.0
 	github.com/go-kit/kit v0.12.0
 	github.com/google/uuid v1.1.2

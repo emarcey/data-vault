@@ -225,7 +225,7 @@ func (s *service) RemoveUserFromGroup(ctx context.Context, req *UserGroupMemberR
 	if err != nil {
 		return err
 	}
-	err = database.DeleteUserGroupMemer(ctx, s.deps.Database, user.Id, req.UserGroupId, req.UserId)
+	err = database.DeleteUserGroupMember(ctx, s.deps.Database, user.Id, req.UserGroupId, req.UserId)
 	if err != nil {
 		return err
 	}
