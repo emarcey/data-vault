@@ -1,4 +1,4 @@
-# data_vault
+# data-vault
 
 ## Table of Contents
 <!-- MarkdownTOC -->
@@ -18,6 +18,7 @@
 - [Components](#components)
 - [Configuration](#configuration)
 - [Development](#development)
+	- [Make commands](#make-commands)
 
 <!-- /MarkdownTOC -->
 
@@ -363,14 +364,23 @@ Used to add read permissions for a user or group.
 ## Roadmap
 
 * Improved permissioning
+	* ~~User key rotation~~
+	* ~~Grant users access to specific key-value pairs~~
+	* ~~Implement user groups for blanket access~~
 	* Wildcard-based access
 * Extended support for interfaces
 	* Datadog for tracing support
 	* Other data stores for secret manager/db
 * Better dev tools
+	* ~~Basic make commands~~
+	* Dockerize
+	* Include dependencies in docker compose
 * Automated tests
+	* Unit tests
+	* Integration tests
 * Improve API
-	* Access Logs
+	* ~~Pagination~~
+	* Fetch Access Logs
 
 ## Components
 
@@ -412,5 +422,10 @@ In addition, this is where connection settings for data stores and other depende
 * Copy `server_conf.example.yml` to `server_conf.yml`
 	* Update `server_conf.yml` with postgres and MongoDB settings.
 	* Adjust any other settings as needed
-* Run `go mod vendor` to install vendor packages
-* Run `go run main.go` to start the server
+
+### Make commands
+
+* `fmt`: Just runs `go fmt`
+* `build`: vendors & compiles executable
+* `unit`: runs unit tests
+* `run`: runs server via `go run main.go`
