@@ -11,6 +11,7 @@
 		- [Client Secret](#client-secret)
 	- [Pagination](#pagination)
 	- [Users](#users)
+	- [Access Logs](#access-logs)
 	- [User Groups](#user-groups)
 	- [Secrets](#secrets)
 	- [Secret Permissions](#secret-permissions)
@@ -184,6 +185,31 @@ If not set, page size will default to 10 and offset will default to 0.
 	* URI: `/users/{userId}`
 	* Response: None, if successful
 	* Note: Delete is soft delete, so record will be inaccessible, but not deleted from the database entirely.
+
+
+### Access Logs
+
+1. List
+	* Method: GET
+	* URI: `/users/{userId}/access-logs`
+	* Request: URL Params with the following values -
+		* PageSize: number of logs to return in one request (Default: 10)
+		* Offset: number of logs to offset (Default: 0)
+		* StartDate: first date (YYYY-MM-DD) from which to fetch logs, inclusive (Default: 1970-01-01)
+		* EndDate: last date (YYYY-MM-DD) from which to fetch logs, inclusive (Default: current date)
+	* Response: List of Access Log objects
+		* ActionType: one of `GetSecret`, `CreateSecret`, `DeleteSecret`
+		```json
+		[
+			{
+	        	"user_id": "03b6f72c-f3f4-43d9-a705-17b326924d74",
+				"action_type": "GetSecret",
+				"key_name": "my-key4",
+				"access_at": "2022-04-01T15:07:03.235-04:00"
+	    	}
+	    ]
+		```
+
 
 ### User Groups
 
@@ -380,7 +406,7 @@ Used to add read permissions for a user or group.
 	* Integration tests
 * Improve API
 	* ~~Pagination~~
-	* Fetch Access Logs
+	* ~~Fetch Access Logs~~
 
 ## Components
 

@@ -3,8 +3,11 @@ package server
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"emarcey/data-vault/common"
 )
 
 func TestParseStringValueErrors(t *testing.T) {
@@ -63,10 +66,9 @@ func TestParseStringValueSuccess(t *testing.T) {
 
 func TestParseIntegerUrlParamErrors(t *testing.T) {
 	var tests = []struct {
-		op           string
-		urlParams    map[string][]string
-		paramName    string
-		defaultValue int
+		op        string
+		urlParams map[string][]string
+		paramName string
 	}{
 		{
 			op: "too few vals",
@@ -159,6 +161,99 @@ func TestParseIntegerUrlParamSuccess(t *testing.T) {
 			result, err := parseIntegerUrlParam(given.op, given.urlParams, given.paramName, given.defaultValue)
 
 			require.Nil(t, err, "error in parseIntegerUrlParam: %v", err)
+			require.Equal(t, result, given.expected, "Result, %v, does not equal expected, %v", result, given.expected)
+		})
+	}
+}
+
+func TestParseDateUrlParamErrors(t *testing.T) {
+	defaultVal := time.Now()
+	var tests = []struct {
+		op        string
+		urlParams map[string][]string
+		paramName string
+	}{
+		{
+			op: "too few vals",
+			urlParams: map[string][]string{
+				"anything": []string{},
+			},
+		},
+		{
+			op: "too many vals",
+			urlParams: map[string][]string{
+				"anything": []string{"abc", "def"},
+			},
+		},
+		{
+			op: "not int",
+			urlParams: map[string][]string{
+				"anything": []string{"25zzz"},
+			},
+		},
+		{
+			op: "not int",
+			urlParams: map[string][]string{
+				"anything": []string{"25.222"},
+			},
+		},
+		{
+			op: "negative",
+			urlParams: map[string][]string{
+				"anything": []string{"-25"},
+			},
+		},
+	}
+
+	for _, given := range tests {
+		t.Run(fmt.Sprintf("parseDateUrlParam - Errors - %v", given.op), func(t *testing.T) {
+			result, err := parseDateUrlParam(given.op, given.urlParams, "anything", defaultVal)
+
+			require.NotNil(t, err, "no error in parseDateUrlParam: %v", err)
+			require.Equal(t, result, time.Time{}, "Result, %v, does not equal expected, -1", result)
+		})
+	}
+}
+
+func TestParseDateUrlParamSuccess(t *testing.T) {
+	defaultVal := time.Now()
+	expected, err := time.Parse(common.DATE_FORMAT, "2022-01-01")
+	require.Nil(t, err, "Unexpected err in date parse %v", err)
+	var tests = []struct {
+		op        string
+		urlParams map[string][]string
+		paramName string
+		expected  time.Time
+	}{
+		{
+			op:        "empty map",
+			urlParams: map[string][]string{},
+			paramName: "anything",
+			expected:  defaultVal,
+		},
+		{
+			op: "missing val",
+			urlParams: map[string][]string{
+				"anything2": []string{"abc", "def"},
+			},
+			paramName: "anything",
+			expected:  defaultVal,
+		},
+		{
+			op: "found",
+			urlParams: map[string][]string{
+				"anything": []string{"2022-01-01"},
+			},
+			paramName: "anything",
+			expected:  expected,
+		},
+	}
+
+	for _, given := range tests {
+		t.Run(fmt.Sprintf("parseDateUrlParam - Success - %v", given.op), func(t *testing.T) {
+			result, err := parseDateUrlParam(given.op, given.urlParams, given.paramName, defaultVal)
+
+			require.Nil(t, err, "error in parseDateUrlParam: %v", err)
 			require.Equal(t, result, given.expected, "Result, %v, does not equal expected, %v", result, given.expected)
 		})
 	}
