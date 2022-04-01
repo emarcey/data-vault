@@ -55,6 +55,7 @@ Admins have extended permissions. In addition to create/fetch, they have the abi
 1. Grant/Revoke permissions on any keys
 1. Create/Delete users
 1. Create/Delete user groups & add/remove users to/from groups
+1. List secret access logs for a given user
 
 
 All API interactions with the key-value store (fetch, create, delete) are additionally logged in the secrets datastore (MongoDB implementation provided). The MongoDB implementation is structured for a time-series collection keyed on user ID.
