@@ -376,7 +376,7 @@ Used to add read permissions for a user or group.
 	* Dockerize
 	* Include dependencies in docker compose
 * Automated tests
-	* Unit tests
+	* ~~Unit tests~~
 	* Integration tests
 * Improve API
 	* ~~Pagination~~

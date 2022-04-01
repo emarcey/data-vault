@@ -10,3 +10,7 @@ run:
 
 unit:
 	go test -v ./...
+
+unit-coverage:
+	go get golang.org/x/tools/cmd/cover
+	go test -cover ./...
