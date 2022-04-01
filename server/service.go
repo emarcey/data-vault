@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"emarcey/data-vault/common"
@@ -36,6 +37,9 @@ type Service interface {
 	DeleteSecret(ctx context.Context, secretName string) error
 	GrantPermission(ctx context.Context, req *SecretPermissionRequest) error
 	RevokePermission(ctx context.Context, req *SecretPermissionRequest) error
+
+	// access logs
+	ListAccessLogs(ctx context.Context, req *common.ListAccessLogsRequest) ([]*common.AccessLog, error)
 }
 
 type service struct {
@@ -150,7 +154,11 @@ func (s *service) GetAccessToken(ctx context.Context) (*common.AccessToken, erro
 	}
 	s.deps.AccessTokens.Delete(tokenId)
 	accessToken := common.GenUuid()
+	fmt.Printf("accessToken: %v\n", accessToken)
+	fmt.Printf("common.HashSha256(accessToken): %v\n", common.HashSha256(accessToken))
+	fmt.Printf("s.deps.ServerConfigs.AccessTokenHours: %v\n", s.deps.ServerConfigs.AccessTokenHours)
 	invalidAt := time.Now().Add(time.Duration(s.deps.ServerConfigs.AccessTokenHours) * time.Hour)
+	fmt.Printf("invalidAt: %v %v %v\n", time.Now(), invalidAt, time.Duration(s.deps.ServerConfigs.AccessTokenHours)*time.Hour)
 	err = database.CreateAccessToken(ctx, tx, user.Id, common.HashSha256(accessToken), invalidAt)
 	if err != nil {
 		tx.Rollback()
@@ -374,4 +382,8 @@ func (s *service) RevokePermission(ctx context.Context, req *SecretPermissionReq
 		return database.DeleteSecretPermission(ctx, s.deps.Database, user.Id, req.UserId, secretId)
 	}
 	return database.DeleteSecretGroupPermission(ctx, s.deps.Database, user.Id, req.UserGroupId, secretId)
+}
+
+func (s *service) ListAccessLogs(ctx context.Context, req *common.ListAccessLogsRequest) ([]*common.AccessLog, error) {
+	return s.deps.SecretsManager.ListAccessLogs(ctx, req)
 }

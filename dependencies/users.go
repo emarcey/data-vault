@@ -124,12 +124,12 @@ func NewUserCache(ctx context.Context, logger *logrus.Logger, db *database.Datab
 	return userCache, nil
 }
 
-func NewMockUserCache(logger *logrus.Logger, users map[string]*common.User) *UserCache {
-	var m sync.Mutex
-	return &UserCache{
-		m:       m,
-		logger:  logger,
-		users:   users,
-		updates: make(chan UserCacheUpdate, 10),
-	}
-}
+// func NewMockUserCache(logger *logrus.Logger, users map[string]*common.User) *UserCache {
+// 	var m sync.Mutex
+// 	return &UserCache{
+// 		m:       m,
+// 		logger:  logger,
+// 		users:   users,
+// 		updates: make(chan UserCacheUpdate, 10),
+// 	}
+// }

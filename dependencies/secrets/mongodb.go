@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	bsonPrimitive "go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	mongoOptions "go.mongodb.org/mongo-driver/mongo/options"
 	mongoWriteConcern "go.mongodb.org/mongo-driver/mongo/writeconcern"
@@ -77,6 +78,38 @@ func (s *MongoSecretsManager) LogAccess(ctx context.Context, log *common.AccessL
 		return common.NewMongoError("LogAccess", "Error inserting log, %+v, received error, %v", log, err)
 	}
 	return nil
+}
+
+func (s *MongoSecretsManager) ListAccessLogs(ctx context.Context, req *common.ListAccessLogsRequest) ([]*common.AccessLog, error) {
+	op := "ListAccessLogs"
+	if req == nil {
+		return nil, common.NewMongoError(op, "Request is nil")
+	}
+	filterQueries := []bson.M{
+		bson.M{"user_id": req.UserId},
+		bson.M{"access_at": bson.M{
+			"$gte": bsonPrimitive.NewDateTimeFromTime(req.StartDate),
+			"$lte": bsonPrimitive.NewDateTimeFromTime(req.EndDate),
+		}},
+	}
+
+	sort := map[string]interface{}{"access_at": -1}
+
+	opts := mongoOptions.Find().SetLimit(int64(req.PageSize)).SetSkip(int64(req.Offset)).SetSort(sort)
+
+	rows, err := s.logCollection.Find(ctx, bson.M{"$and": filterQueries}, opts)
+	if err != nil {
+		return nil, common.NewMongoError(op, "Error finding documents: %s", err)
+	}
+	defer rows.Close(ctx)
+
+	var logs []*common.AccessLog
+	err = rows.All(ctx, &logs)
+	if err != nil {
+		return nil, common.NewMongoError(op, "Error decoding documents: %s", err)
+	}
+	return logs, nil
+
 }
 
 func NewMongoSecretsManager(ctx context.Context, opts MongoSecretsOpts) (SecretsManager, error) {

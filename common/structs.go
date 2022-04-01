@@ -82,7 +82,7 @@ type EncryptedSecret struct {
 }
 
 type AccessLog struct {
-	UserId     string                 `json:"user_id" bson"user_id"`
+	UserId     string                 `json:"user_id" bson:"user_id"`
 	ActionType string                 `json:"action_type" bson:"action_type"`
 	KeyName    string                 `json:"key_name" bson:"key_name"`
 	AccessAt   bsonPrimitive.DateTime `json:"access_at" bson:"access_at"`
@@ -95,4 +95,12 @@ func NewAccessLog(userId, actionType, keyName string) *AccessLog {
 		KeyName:    keyName,
 		AccessAt:   bsonPrimitive.NewDateTimeFromTime(time.Now().UTC()),
 	}
+}
+
+type ListAccessLogsRequest struct {
+	UserId    string
+	PageSize  int
+	Offset    int
+	StartDate time.Time
+	EndDate   time.Time
 }

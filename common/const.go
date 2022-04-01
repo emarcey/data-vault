@@ -2,6 +2,7 @@ package common
 
 import (
 	"regexp"
+	"time"
 )
 
 type CacheUpdateType int
@@ -29,3 +30,7 @@ var SUPPORTED_DATA_TYPES = map[string]bool{
 }
 
 const KEY_SIZE = 32
+
+const DATE_FORMAT = "2006-01-02"
+
+var DEFAULT_START_TIME = time.Unix(0, 0)

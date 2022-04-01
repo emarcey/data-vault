@@ -123,12 +123,12 @@ func NewAccessTokenCache(ctx context.Context, logger *logrus.Logger, db *databas
 	return accessTokenCache, nil
 }
 
-func NewMockAccessTokenCache(logger *logrus.Logger, accessTokens map[string]*common.AccessToken) *AccessTokenCache {
-	var m sync.Mutex
-	return &AccessTokenCache{
-		m:            m,
-		logger:       logger,
-		accessTokens: accessTokens,
-		updates:      make(chan AccessTokenCacheUpdate, 10),
-	}
-}
+// func NewMockAccessTokenCache(logger *logrus.Logger, accessTokens map[string]*common.AccessToken) *AccessTokenCache {
+// 	var m sync.Mutex
+// 	return &AccessTokenCache{
+// 		m:            m,
+// 		logger:       logger,
+// 		accessTokens: accessTokens,
+// 		updates:      make(chan AccessTokenCacheUpdate, 10),
+// 	}
+// }

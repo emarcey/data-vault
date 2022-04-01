@@ -1,14 +1,14 @@
 package server
 
 type PaginationRequest struct {
-	PageSize int `json:"PageSize"`
-	Offset   int `json:"Offset"`
+	PageSize int `json:"page_size"`
+	Offset   int `json:"offset"`
 }
 
 type ListUsersInGroupRequest struct {
 	UserGroupId string
-	PageSize    int `json:"PageSize"`
-	Offset      int `json:"Offset"`
+	PageSize    int `json:"page_size"`
+	Offset      int `json:"offset"`
 }
 
 type CreateUserRequest struct {

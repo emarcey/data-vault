@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -62,6 +63,7 @@ func MakeHttpHandler(s Service, deps *dependencies.Dependencies) http.Handler {
 		createUserGroupEndpoint(s),
 		addUserToGroupEndpoint(s),
 		removeUserFromGroupEndpoint(s),
+		listAccessLogsEndpoint(s),
 	}
 	makeMethods(r, deps, handlers.HandleAdminEndpoints, adminEndpoints, encodeResponse, options...)
 
@@ -122,6 +124,21 @@ func parseIntegerUrlParam(op string, urlParams map[string][]string, paramName st
 		return -1, common.NewInvalidParamsError(op, "Expected single integer value for %v, got %v", paramName, param)
 	}
 	return paramInt, nil
+}
+
+func parseDateUrlParam(op string, urlParams map[string][]string, paramName string, defaultValue time.Time) (time.Time, error) {
+	param, ok := urlParams[paramName]
+	if !ok {
+		return defaultValue, nil
+	}
+	if len(param) != 1 {
+		return time.Time{}, common.NewInvalidParamsError(op, "Expected single date value for %v, got %v", paramName, param)
+	}
+	paramDate, err := time.Parse(common.DATE_FORMAT, param[0])
+	if err != nil {
+		return time.Time{}, common.NewInvalidParamsError(op, "Expected single date value for %v, got %v", paramName, param)
+	}
+	return paramDate, nil
 }
 
 func decodePaginationRequest(op string) httptransport.DecodeRequestFunc {
