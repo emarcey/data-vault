@@ -1,7 +1,7 @@
 # only set if you need to use a local network
 NETWORK=local-dev_default
 
-VERSION := $(shell grep -Eo '(v[0-9]+[\.][0-9]+[\.][0-9]+([-a-zA-Z0-9]*)?)' version.go)
+VERSION := $(shell grep -Eo '(v[0-9]+[\.][0-9]+[\.][0-9]+([-a-zA-Z0-9]*)?)' common/version.go)
 
 fmt:
 	go fmt

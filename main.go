@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/emarcey/data-vault/common"
 	"github.com/emarcey/data-vault/dependencies"
 	"github.com/emarcey/data-vault/server"
 )
@@ -21,6 +22,7 @@ func main() {
 		fmt.Print(err)
 		os.Exit(1)
 	}
+	opts.Version = common.Version
 
 	deps, err := dependencies.MakeDependencies(ctx, opts)
 	if err != nil {

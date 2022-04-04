@@ -1,6 +1,5 @@
 ---
-version: v0.0.1
-httpAddr: localhost:9090
+httpAddr: 0.0.0.0:9090
 loggerType: json
 env: local
 serverConfigs:

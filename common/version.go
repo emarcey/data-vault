@@ -1,4 +1,4 @@
-package main
+package common
 
 // Version Number
 const Version = "v0.1.0"

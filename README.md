@@ -456,3 +456,5 @@ In addition, this is where connection settings for data stores and other depende
 * `build`: vendors & compiles executable
 * `unit`: runs unit tests
 * `run`: runs server via `go run main.go`
+* `docker-build`: builds a runnable Docker image for the server
+* `docker-run`: runs the server as a Docker container
