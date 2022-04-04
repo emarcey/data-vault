@@ -32,8 +32,8 @@ CREATE TABLE admin.users (
     client_secret_hash TEXT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT true,
     type TEXT REFERENCES admin.user_type(id),
-    created_by UUID REFERENCES admin.users(id),
-    updated_by UUID REFERENCES admin.users(id)
+    created_by UUID REFERENCES admin.users(id) NOT NULL,
+    updated_by UUID REFERENCES admin.users(id) NOT NULL
 );
 
 COMMENT ON TABLE admin.users IS 'Users stores information about each user, including their user_id & a hash of the secret used to generate an access token.';
