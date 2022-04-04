@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 func listUserGroupsEndpoint(s Service) endpointBuilder {

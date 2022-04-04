@@ -400,7 +400,7 @@ Used to add read permissions for a user or group.
 	* Other data stores for secret manager/db
 * Better dev tools
 	* ~~Basic make commands~~
-	* Dockerize
+	* ~~Dockerize~~
 	* Include dependencies in docker compose
 * Automated tests
 	* ~~Unit tests~~

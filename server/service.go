@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"emarcey/data-vault/common"
-	"emarcey/data-vault/database"
-	"emarcey/data-vault/dependencies"
+	"github.com/emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/database"
+	"github.com/emarcey/data-vault/dependencies"
 )
 
 type Service interface {

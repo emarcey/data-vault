@@ -7,8 +7,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"emarcey/data-vault/common"
-	"emarcey/data-vault/database"
+	"github.com/emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/database"
 )
 
 type AccessTokenCacheUpdate struct {

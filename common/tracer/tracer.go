@@ -6,7 +6,7 @@ import (
 	sentry "github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 type Tracer interface {

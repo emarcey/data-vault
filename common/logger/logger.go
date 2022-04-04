@@ -5,7 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 func MakeLogger(loggerType string, env string) (*logrus.Logger, error) {

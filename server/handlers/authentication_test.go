@@ -10,9 +10,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
-	"emarcey/data-vault/common"
-	"emarcey/data-vault/common/tracer"
-	"emarcey/data-vault/dependencies"
+	"github.com/emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common/tracer"
+	"github.com/emarcey/data-vault/dependencies"
 )
 
 var devUser = &common.User{

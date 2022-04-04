@@ -8,8 +8,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 
-	"emarcey/data-vault/common/logger"
-	"emarcey/data-vault/common/tracer"
+	"github.com/emarcey/data-vault/common/logger"
+	"github.com/emarcey/data-vault/common/tracer"
 )
 
 type initFunc func(dbMock *MockDatabase)

@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 func SelectUsersForAuth(ctx context.Context, db Database) (map[string]*common.User, error) {

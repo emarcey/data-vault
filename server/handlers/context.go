@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 

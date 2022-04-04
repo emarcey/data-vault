@@ -3,7 +3,7 @@ package handlers
 import (
 	"github.com/go-kit/kit/endpoint"
 
-	"emarcey/data-vault/dependencies"
+	"github.com/emarcey/data-vault/dependencies"
 )
 
 type EndpointHandler func(e endpoint.Endpoint, op string, deps *dependencies.Dependencies) endpoint.Endpoint

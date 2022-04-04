@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 func CreateSecret(ctx context.Context, db Database, secret *common.Secret) error {

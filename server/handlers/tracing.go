@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 
-	"emarcey/data-vault/dependencies"
+	"github.com/emarcey/data-vault/dependencies"
 )
 
 // EndpointTracingWrapper adds a tracing context to every endpoint, exactly like it sounds

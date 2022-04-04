@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 
-	"emarcey/data-vault/dependencies"
+	"github.com/emarcey/data-vault/dependencies"
 )
 
 // EndpointLoggingWrapper adds logs to every endpoint, exactly like it sounds

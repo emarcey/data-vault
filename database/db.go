@@ -8,8 +8,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 
-	"emarcey/data-vault/common"
-	"emarcey/data-vault/common/tracer"
+	"github.com/emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common/tracer"
 )
 
 type DatabaseOpts struct {

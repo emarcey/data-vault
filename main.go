@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"emarcey/data-vault/dependencies"
-	"emarcey/data-vault/server"
+	"github.com/emarcey/data-vault/dependencies"
+	"github.com/emarcey/data-vault/server"
 )
 
 func main() {

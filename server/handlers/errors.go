@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 // EncodeError JSON encodes the supplied error

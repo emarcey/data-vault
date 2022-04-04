@@ -11,7 +11,7 @@ import (
 	mongoOptions "go.mongodb.org/mongo-driver/mongo/options"
 	mongoWriteConcern "go.mongodb.org/mongo-driver/mongo/writeconcern"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 type MongoSecretsOpts struct {

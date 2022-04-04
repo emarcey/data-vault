@@ -9,7 +9,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 func TestSelectAccessTokensForAuthErrors(t *testing.T) {

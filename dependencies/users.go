@@ -7,8 +7,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"emarcey/data-vault/common"
-	"emarcey/data-vault/database"
+	"github.com/emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/database"
 )
 
 type UserCacheUpdate struct {
@@ -80,7 +80,6 @@ func (u *UserCache) handleRefresh(ctx context.Context, db *database.DatabaseEngi
 	defer u.m.Unlock()
 	authUsers, err := database.SelectUsersForAuth(ctx, db)
 	if err != nil {
-		u.logger.Errorf("Help?! %v\n", err)
 		return err
 	}
 	u.users = authUsers

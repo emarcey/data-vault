@@ -7,7 +7,7 @@ import (
 
 	httptransport "github.com/go-kit/kit/transport/http"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 func decodeAccessLogsRequest(op string) httptransport.DecodeRequestFunc {

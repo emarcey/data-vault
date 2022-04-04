@@ -12,9 +12,9 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 
-	"emarcey/data-vault/common"
-	"emarcey/data-vault/dependencies"
-	"emarcey/data-vault/server/handlers"
+	"github.com/emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/dependencies"
+	"github.com/emarcey/data-vault/server/handlers"
 )
 
 var (

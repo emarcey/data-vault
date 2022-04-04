@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 func SelectAccessTokensForAuth(ctx context.Context, db Database) (map[string]*common.AccessToken, error) {

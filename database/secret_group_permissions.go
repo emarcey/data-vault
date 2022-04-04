@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 func DeleteSecretGroupPermission(ctx context.Context, db Database, callingUserId, userGroupId, secretId string) error {

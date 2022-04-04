@@ -3,7 +3,7 @@ package secrets
 import (
 	"context"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 type SecretsManager interface {

@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 
-	"emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common"
 )
 
 func DeleteUserGroupMember(ctx context.Context, db Database, callingUserId, userGroupId, userId string) error {

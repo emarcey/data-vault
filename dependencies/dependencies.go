@@ -7,11 +7,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"emarcey/data-vault/common"
-	"emarcey/data-vault/common/logger"
-	"emarcey/data-vault/common/tracer"
-	"emarcey/data-vault/database"
-	"emarcey/data-vault/dependencies/secrets"
+	"github.com/emarcey/data-vault/common"
+	"github.com/emarcey/data-vault/common/logger"
+	"github.com/emarcey/data-vault/common/tracer"
+	"github.com/emarcey/data-vault/database"
+	"github.com/emarcey/data-vault/dependencies/secrets"
 )
 
 type ServerConfigs struct {
