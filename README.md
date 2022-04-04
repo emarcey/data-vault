@@ -396,8 +396,10 @@ Used to add read permissions for a user or group.
 	* ~~Implement user groups for blanket access~~
 	* Wildcard-based access
 * Extended support for interfaces
-	* Datadog for tracing support
-	* Other data stores for secret manager/db
+	* Tracer:
+		* Datadog
+	* Secrets Manager
+		* Postgres
 * Better dev tools
 	* ~~Basic make commands~~
 	* ~~Dockerize~~
