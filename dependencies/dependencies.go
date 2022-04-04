@@ -31,6 +31,7 @@ type DependenciesInitOpts struct {
 }
 
 type Dependencies struct {
+	Env            string
 	Logger         *logrus.Logger
 	Tracer         tracer.TracerCreator
 	SecretsManager secrets.SecretsManager
@@ -82,6 +83,7 @@ func MakeDependencies(ctx context.Context, opts DependenciesInitOpts) (*Dependen
 		return nil, err
 	}
 	deps := &Dependencies{
+		Env:            opts.Env,
 		Logger:         logger,
 		Tracer:         tracer,
 		SecretsManager: secretsManager,

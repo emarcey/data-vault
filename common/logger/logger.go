@@ -11,7 +11,7 @@ import (
 func MakeLogger(loggerType string, env string) (*logrus.Logger, error) {
 	severityLevel := logrus.DebugLevel
 	if env != "local" {
-		severityLevel = logrus.InfoLevel
+		severityLevel = logrus.DebugLevel
 	}
 	logger := logrus.New()
 	switch loggerType {
@@ -20,7 +20,9 @@ func MakeLogger(loggerType string, env string) (*logrus.Logger, error) {
 		logger.SetFormatter(&logrus.JSONFormatter{})
 	case "text":
 		logger.SetOutput(os.Stdout)
-		logger.SetFormatter(&logrus.TextFormatter{})
+		logger.SetFormatter(&logrus.TextFormatter{
+			ForceColors: true,
+		})
 	default:
 		return nil, common.NewInitializationError("logger", "Unknown logger type %s", loggerType)
 	}
