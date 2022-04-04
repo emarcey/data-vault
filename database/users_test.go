@@ -181,7 +181,7 @@ func TestDeleteUserErrors(t *testing.T) {
 			require.Nil(t, err, "Unexpected err creating mock db: %v", err)
 			given(dbMock)
 
-			err = DeleteUser(context.Background(), dbMock, "userId")
+			err = DeleteUser(context.Background(), dbMock, "callingUserId", "userId")
 			require.NotNil(t, err, "no error in DeleteUser: %v", err)
 			err = dbMock.mock.ExpectationsWereMet()
 			require.Nil(t, err, "expectations not met: %v", err)
@@ -192,7 +192,7 @@ func TestDeleteUserErrors(t *testing.T) {
 func TestDeleteUserSuccesses(t *testing.T) {
 	var inits = []initFunc{
 		func(dbMock *MockDatabase) {
-			dbMock.mock.ExpectExec("UPDATE").WillReturnResult(sqlmock.NewResult(1, 1)).WithArgs("userId")
+			dbMock.mock.ExpectExec("UPDATE").WillReturnResult(sqlmock.NewResult(1, 1)).WithArgs("callingUserId", "userId")
 		},
 	}
 
@@ -202,7 +202,7 @@ func TestDeleteUserSuccesses(t *testing.T) {
 			require.Nil(t, err, "Unexpected err creating mock db: %v", err)
 			given(dbMock)
 
-			err = DeleteUser(context.Background(), dbMock, "userId")
+			err = DeleteUser(context.Background(), dbMock, "callingUserId", "userId")
 			require.Nil(t, err, "error in DeleteUser: %v", err)
 			err = dbMock.mock.ExpectationsWereMet()
 			require.Nil(t, err, "expectations not met: %v", err)
@@ -231,7 +231,7 @@ func TestCreateUserErrors(t *testing.T) {
 			require.Nil(t, err, "Unexpected err creating mock db: %v", err)
 			given(dbMock)
 
-			result, err := CreateUser(context.Background(), dbMock, user1.Id, user1.Name, user1.Type, user1.SecretHash)
+			result, err := CreateUser(context.Background(), dbMock, "callingUserId", user1.Id, user1.Name, user1.Type, user1.SecretHash)
 			require.NotNil(t, err, "no error in CreateUser: %v", err)
 			require.Nil(t, result, "Result was not nil: %v", result)
 			err = dbMock.mock.ExpectationsWereMet()
@@ -263,7 +263,7 @@ func TestCreateUserSuccesses(t *testing.T) {
 			require.Nil(t, err, "Unexpected err creating mock db: %v", err)
 			given.initFunc(dbMock)
 
-			result, err := CreateUser(context.Background(), dbMock, user1.Id, user1.Name, user1.Type, user1.SecretHash)
+			result, err := CreateUser(context.Background(), dbMock, "callingUserId", user1.Id, user1.Name, user1.Type, user1.SecretHash)
 			require.Nil(t, err, "no error in CreateUser: %v", err)
 			given.expected.SecretHash = ""
 			require.Equal(t, result, given.expected, "Result %+v did not equal expected %+v", result, given.expected)

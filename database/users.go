@@ -190,17 +190,18 @@ func GetUserById(ctx context.Context, db Database, userId string) (*common.User,
 	return user, nil
 }
 
-func DeleteUser(ctx context.Context, db Database, userId string) error {
+func DeleteUser(ctx context.Context, db Database, callingUserId, userId string) error {
 	operation := "DeleteUser"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
 	UPDATE  admin.users
-	SET is_active = false
-	WHERE	id = $1
+	SET is_active = false,
+		updated_by = $1
+	WHERE	id = $2
 	`
-	result, err := db.ExecContext(tracer.Context(), query, userId)
+	result, err := db.ExecContext(tracer.Context(), query, callingUserId, userId)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)
@@ -218,19 +219,19 @@ func DeleteUser(ctx context.Context, db Database, userId string) error {
 	return nil
 }
 
-func CreateUser(ctx context.Context, db Database, userId, userName, userType, userSecretHash string) (*common.User, error) {
+func CreateUser(ctx context.Context, db Database, callingUserId, userId, userName, userType, userSecretHash string) (*common.User, error) {
 	operation := "CreateUser"
 	tracer := db.CreateTrace(ctx, operation)
 	defer tracer.Close()
 
 	query := `
-	INSERT INTO  admin.users (id, name, is_active, type, client_secret_hash)
-	VALUES($1, $2, $3, $4, $5)
+	INSERT INTO  admin.users (id, name, is_active, type, client_secret_hash, created_by, updated_by)
+	VALUES($1, $2, $3, $4, $5, $6, $7)
 	RETURNING id, name, is_active, type
 	`
 	var user *common.User
 
-	rows, err := db.QueryContext(tracer.Context(), query, userId, userName, true, userType, userSecretHash)
+	rows, err := db.QueryContext(tracer.Context(), query, userId, userName, true, userType, userSecretHash, callingUserId, callingUserId)
 	if err != nil {
 		dbErr := common.NewDatabaseError(err, operation, "")
 		tracer.CaptureException(dbErr)

@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"emarcey/data-vault/common"
@@ -68,9 +67,13 @@ func (s *service) GetUser(ctx context.Context, userId string) (*common.User, err
 }
 
 func (s *service) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
+	callingUser, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	userId := common.GenUuid()
 	userSecret := common.GenUuid()
-	user, err := database.CreateUser(ctx, s.deps.Database, userId, req.Name, req.Type, common.HashSha256(userSecret))
+	user, err := database.CreateUser(ctx, s.deps.Database, callingUser.Id, userId, req.Name, req.Type, common.HashSha256(userSecret))
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +118,10 @@ func (s *service) RotateUserSecret(ctx context.Context) (*CreateUserResponse, er
 }
 
 func (s *service) DeleteUser(ctx context.Context, userId string) error {
+	callingUser, err := common.FetchUserFromContext(ctx)
+	if err != nil {
+		return err
+	}
 	tx, err := s.deps.Database.StartTransaction(ctx)
 	if err != nil {
 		return err
@@ -125,7 +132,7 @@ func (s *service) DeleteUser(ctx context.Context, userId string) error {
 		return err
 	}
 	s.deps.AccessTokens.Delete(tokenId)
-	err = database.DeleteUser(ctx, s.deps.Database, userId)
+	err = database.DeleteUser(ctx, s.deps.Database, callingUser.Id, userId)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -154,12 +161,9 @@ func (s *service) GetAccessToken(ctx context.Context) (*common.AccessToken, erro
 	}
 	s.deps.AccessTokens.Delete(tokenId)
 	accessToken := common.GenUuid()
-	fmt.Printf("accessToken: %v\n", accessToken)
-	fmt.Printf("common.HashSha256(accessToken): %v\n", common.HashSha256(accessToken))
-	fmt.Printf("s.deps.ServerConfigs.AccessTokenHours: %v\n", s.deps.ServerConfigs.AccessTokenHours)
 	invalidAt := time.Now().Add(time.Duration(s.deps.ServerConfigs.AccessTokenHours) * time.Hour)
-	fmt.Printf("invalidAt: %v %v %v\n", time.Now(), invalidAt, time.Duration(s.deps.ServerConfigs.AccessTokenHours)*time.Hour)
-	err = database.CreateAccessToken(ctx, tx, user.Id, common.HashSha256(accessToken), invalidAt)
+	hashedToken := common.HashSha256(accessToken)
+	err = database.CreateAccessToken(ctx, tx, user.Id, hashedToken, invalidAt)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -175,7 +179,7 @@ func (s *service) GetAccessToken(ctx context.Context) (*common.AccessToken, erro
 		IsLatest:  true,
 		InvalidAt: invalidAt,
 	}
-	s.deps.AccessTokens.Add(tokenId, token)
+	s.deps.AccessTokens.Add(hashedToken, token)
 	return token, nil
 }
 
