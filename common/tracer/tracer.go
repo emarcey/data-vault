@@ -2,6 +2,7 @@ package tracer
 
 import (
 	"context"
+	"fmt"
 
 	sentry "github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
@@ -23,12 +24,18 @@ type SentryOpts struct {
 	DSN string `yaml:"dsn"`
 }
 
-type TracerOpts struct {
-	TracerType string     `yaml:"tracerType"`
-	SentryOpts SentryOpts `yaml:"sentryOpts"`
+type DataDogOpts struct {
+	AgentAddr string `yaml:"agentAddr"`
+	AgentPort string `yaml:"agentPort"`
 }
 
-func NewTracerCreator(logger *logrus.Logger, opts TracerOpts) (TracerCreator, error) {
+type TracerOpts struct {
+	TracerType  string      `yaml:"tracerType"`
+	SentryOpts  SentryOpts  `yaml:"sentryOpts"`
+	DataDogOpts DataDogOpts `yaml:"dataDogOpts"`
+}
+
+func NewTracerCreator(ctx context.Context, logger *logrus.Logger, opts TracerOpts) (TracerCreator, error) {
 	switch opts.TracerType {
 	case "sentry":
 		tracer, err := NewSentryTracerMaker(sentry.ClientOptions{
@@ -40,6 +47,8 @@ func NewTracerCreator(logger *logrus.Logger, opts TracerOpts) (TracerCreator, er
 		return tracer, nil
 	case "local":
 		return NewLocalTracerMaker(logger), nil
+	case "datadog":
+		return NewDataDogTracerMaker(ctx, opts.DataDogOpts)
 	case "noop", "":
 		return NewNoOpTracerMaker(), nil
 	default:

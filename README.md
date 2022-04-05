@@ -397,7 +397,8 @@ Used to add read permissions for a user or group.
 	* Wildcard-based access
 * Extended support for interfaces
 	* Tracer:
-		* Datadog
+		* ~~Datadog~~
+		* Jaeger
 	* Secrets Manager
 		* Postgres
 * Better dev tools
@@ -425,9 +426,10 @@ Used to add read permissions for a user or group.
 		* JSON logger
 * Tracer: agent that provides tracing for datastore/API access
 	* Currently supported:
-		* No Op. Literally does nothing
+		* No Op (literally does nothing)
 		* Local tracer (basically just a logger)
 		* [Sentry.io](sentry.io)
+		* [DataDog](datadoghq.com)
 * Service:
 	* [Golang](golang.org) service
 		* Endpoints supported with [go-kit](https://github.com/go-kit/kit) and [gorilla mux](https://github.com/gorilla/mux)

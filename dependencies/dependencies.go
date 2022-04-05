@@ -59,7 +59,7 @@ func MakeDependencies(ctx context.Context, opts DependenciesInitOpts) (*Dependen
 	if err != nil {
 		return nil, err
 	}
-	tracer, err := tracer.NewTracerCreator(logger, opts.TracerOpts)
+	tracer, err := tracer.NewTracerCreator(ctx, logger, opts.TracerOpts)
 	if err != nil {
 		return nil, err
 	}

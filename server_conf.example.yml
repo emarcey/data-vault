@@ -5,10 +5,13 @@ env: local
 serverConfigs:
   dataRefreshSeconds: 5
   accessTokenHours: 24
-  tracerOpts:
-    tracerType:
-    sentryOpts:
-      dsn:
+tracerOpts:
+  tracerType: noop
+  datadogOpts:
+    agentAddr:
+    agentPort:
+  sentryOpts:
+    dsn:
 secretsManagerOpts:
   managerType: mongodb
   mongoOpts:
